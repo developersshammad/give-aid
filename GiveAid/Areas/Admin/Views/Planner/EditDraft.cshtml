@@ -1,0 +1,103 @@
+@model DraftEditViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Edit the proposed draft";
+}
+
+<p class="text-secondary mb-3" style="max-width:60rem">
+    <i class="bi bi-pencil-square me-1"></i>Change anything the planner got wrong. Saving does <b>not</b> create the programme —
+    it still waits for your approval on the plan page.
+</p>
+
+<form asp-action="EditDraft" method="post" class="panel" style="max-width:60rem" novalidate>
+    <input type="hidden" asp-for="StepId" />
+    <input type="hidden" asp-for="SessionId" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="row g-3">
+        <div class="col-md-8">
+            <label asp-for="Title" class="form-label"></label>
+            <input asp-for="Title" class="form-control" />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Category" class="form-label"></label>
+            <select asp-for="Category" asp-items="ViewBag.Categories" class="form-select"></select>
+            <span asp-validation-for="Category" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="NgoId" class="form-label"></label>
+            <select asp-for="NgoId" asp-items="ViewBag.Ngos" class="form-select"><option value="">(none)</option></select>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Venue" class="form-label"></label>
+            <input asp-for="Venue" class="form-control" />
+            <span asp-validation-for="Venue" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="StartDate" class="form-label"></label>
+            <input asp-for="StartDate" class="form-control" />
+            <span asp-validation-for="StartDate" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="EndDate" class="form-label">End date <span class="text-secondary fw-normal">(optional)</span></label>
+            <input asp-for="EndDate" class="form-control" />
+            <span asp-validation-for="EndDate" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Beneficiaries" class="form-label"></label>
+            <input asp-for="Beneficiaries" class="form-control" type="number" min="0" />
+            <span asp-validation-for="Beneficiaries" class="text-danger"></span>
+        </div>
+        <div class="col-12">
+            <label asp-for="Summary" class="form-label">Short summary (shown on cards)</label>
+            <input asp-for="Summary" class="form-control" maxlength="300" />
+            <span asp-validation-for="Summary" class="text-danger"></span>
+        </div>
+        <div class="col-12">
+            <label asp-for="Details" class="form-label">Full details</label>
+            <textarea asp-for="Details" class="form-control editor" rows="10"></textarea>
+            <div class="form-text">Blank line = new paragraph, <code>## </code> = heading, <code>- </code> = bullet point.</div>
+            <span asp-validation-for="Details" class="text-danger"></span>
+        </div>
+
+        <div class="col-12">
+            <h3 class="h6 mt-2 mb-1">Budget</h3>
+            <p class="form-text mt-0">Leave an item empty to remove that row. Amounts are in rupees.</p>
+            <table class="pl-budget pl-budget-edit">
+                <thead><tr><th>Item</th><th class="text-end">Amount (Rs)</th></tr></thead>
+                <tbody>
+                    @for (int i = 0; i < Model.Lines.Count; i++)
+                    {
+                        var empty = string.IsNullOrWhiteSpace(Model.Lines[i].Item);
+                        <tr>
+                            <td><input name="Lines[@i].Item" value="@Model.Lines[i].Item" class="form-control form-control-sm" maxlength="100" aria-label="Budget item @(i + 1)" /></td>
+                            <td><input name="Lines[@i].Amount" value="@(empty && Model.Lines[i].Amount == 0 ? "" : Model.Lines[i].Amount.ToString("0.##", CultureInfo.InvariantCulture))"
+                                       type="number" min="0" step="1" class="form-control form-control-sm text-end" aria-label="Amount for budget item @(i + 1)" /></td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot><tr><th>Total</th><th class="text-end" id="plTotal"></th></tr></tfoot>
+            </table>
+        </div>
+    </div>
+    <div class="mt-4 d-flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-ga"><i class="bi bi-check2 me-1"></i>Save changes</button>
+        <a asp-action="Details" asp-route-id="@Model.SessionId" class="btn btn-outline-ga">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var inputs = document.querySelectorAll(".pl-budget-edit input[type=number]"), out = document.getElementById("plTotal");
+            function total() {
+                var t = 0;
+                inputs.forEach(function (i) { var v = parseFloat(i.value); if (!isNaN(v)) t += v; });
+                out.textContent = "Rs " + Math.round(t).toLocaleString("en-PK");
+            }
+            inputs.forEach(function (i) { i.addEventListener("input", total); });
+            total();
+        })();
+    </script>
+}

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120" width="320" height="120">
+<rect width="320" height="120" fill="#ffffff"/>
+<g transform="translate(20,32) scale(3.5)" fill="#2F5D7C">
+  <path d="M10.478 1.647a.5.5 0 1 0-.956-.294l-4 13a.5.5 0 0 0 .956.294zM4.854 4.146a.5.5 0 0 1 0 .708L1.707 8l3.147 3.146a.5.5 0 0 1-.708.708l-3.5-3.5a.5.5 0 0 1 0-.708l3.5-3.5a.5.5 0 0 1 .708 0m6.292 0a.5.5 0 0 0 0 .708L14.293 8l-3.147 3.146a.5.5 0 0 0 .708.708l3.5-3.5a.5.5 0 0 0 0-.708l-3.5-3.5a.5.5 0 0 0-.708 0"/>
+</g>
+<text x="92" y="62" font-family="Trebuchet MS, Segoe UI, Arial, sans-serif" font-size="30" font-weight="700" fill="#2F5D7C">BrightPath</text>
+<text x="93" y="86" font-family="Trebuchet MS, Segoe UI, Arial, sans-serif" font-size="15" letter-spacing="1" fill="#56665F">Software</text>
+</svg>

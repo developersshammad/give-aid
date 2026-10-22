@@ -1,0 +1,111 @@
+@model MemberDashboardViewModel
+@{ ViewData["Title"] = "My account"; }
+<partial name="_PageHead" model="@(("Hello, " + Model.Member.FullName.Split(' ')[0], (string?)("Member since " + Model.Member.RegisteredAt.ToString("MMMM yyyy"))))" />
+
+<section class="section">
+    <div class="container">
+        <partial name="_Alerts" />
+
+        <div class="stat-row mb-4">
+            <div><b>@ContentFormatter.Rupees(Model.TotalGiven)</b><span>given in total</span></div>
+            <div><b>@Model.Donations.Count</b><span>donations</span></div>
+            <div><b>@Model.Interests.Count</b><span>programmes joined</span></div>
+            <div><b>@Model.Invitations.Count</b><span>friends invited</span></div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="section-head mb-3">
+                    <h2 class="h3">My donations</h2>
+                    <a class="btn btn-donate" asp-controller="Donate" asp-action="Index">Give again</a>
+                </div>
+                @if (Model.Donations.Count == 0)
+                {
+                    <div class="panel text-secondary">You have not donated yet. <a asp-controller="Donate" asp-action="Index">Make your first donation</a>.</div>
+                }
+                else
+                {
+                    <div class="table-wrap">
+                        <table class="table table-ga align-middle">
+                            <thead><tr><th>Date</th><th>Cause</th><th>Card</th><th class="text-end">Amount</th><th></th></tr></thead>
+                            <tbody>
+                                @foreach (var d in Model.Donations)
+                                {
+                                    <tr>
+                                        <td>@d.DonatedAt.ToString("dd MMM yyyy")</td>
+                                        <td>@d.Cause?.Name</td>
+                                        <td>@d.CardBrand ending @d.CardLast4</td>
+                                        <td class="text-end fw-semibold">@ContentFormatter.Rupees(d.Amount)</td>
+                                        <td class="text-end"><a asp-controller="Donate" asp-action="Receipt" asp-route-id="@d.TransactionRef">Receipt</a></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+                <div class="section-head mt-5 mb-3">
+                    <h2 class="h3">My questions</h2>
+                    <a asp-controller="Help" asp-action="Index" class="fw-semibold">Ask a question</a>
+                </div>
+                @if (Model.Queries.Count == 0)
+                {
+                    <div class="panel text-secondary">No questions yet.</div>
+                }
+                @foreach (var q in Model.Queries)
+                {
+                    <div class="panel mb-2 py-3">
+                        <div class="d-flex justify-content-between gap-2">
+                            <b>@q.Subject</b>
+                            <span class="status @(q.Status == "Open" ? "status-open" : "status-answered")">@q.Status</span>
+                        </div>
+                        <div class="text-secondary small">@q.CreatedAt.ToString("dd MMM yyyy")</div>
+                        <p class="mb-0 mt-1">@q.Message</p>
+                        @if (!string.IsNullOrEmpty(q.Reply))
+                        {
+                            <div class="reply-bubble"><b>Give-AID replied:</b> @q.Reply</div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="col-lg-4">
+                <div class="panel mb-4">
+                    <h2 class="panel-title">My profile</h2>
+                    <dl class="mb-0 small">
+                        <dt>E-mail</dt><dd>@Model.Member.Email</dd>
+                        <dt>Mobile</dt><dd>@Model.Member.Phone</dd>
+                        <dt>City</dt><dd>@Model.Member.City, @Model.Member.Country</dd>
+                        <dt>Occupation</dt><dd>@Model.Member.Occupation @(string.IsNullOrEmpty(Model.Member.Organization) ? "" : "at " + Model.Member.Organization)</dd>
+                        <dt>Qualification</dt><dd>@Model.Member.Qualification</dd>
+                        @if (!string.IsNullOrEmpty(Model.Member.AreasOfInterest)) { <dt>Interested in</dt><dd class="mb-0">@Model.Member.AreasOfInterest</dd> }
+                    </dl>
+                </div>
+
+                <div class="panel mb-4">
+                    <h2 class="panel-title">Programmes I joined</h2>
+                    @if (Model.Interests.Count == 0)
+                    {
+                        <p class="text-secondary mb-2">None yet.</p>
+                    }
+                    <ul class="list-unstyled mb-2">
+                        @foreach (var i in Model.Interests)
+                        {
+                            <li class="mb-2">
+                                <a asp-controller="Programmes" asp-action="Details" asp-route-id="@i.ProgrammeId" class="fw-semibold">@i.Programme?.Title</a>
+                                <div class="small text-secondary">as @i.ParticipationType.ToLower(), @i.Programme?.StartDate.ToString("dd MMM yyyy")</div>
+                            </li>
+                        }
+                    </ul>
+                    <a asp-controller="Programmes" asp-action="Index">Browse programmes</a>
+                </div>
+
+                <div class="panel">
+                    <h2 class="panel-title">Invite friends</h2>
+                    <p class="text-secondary">You have invited @Model.Invitations.Count @(Model.Invitations.Count == 1 ? "friend" : "friends").</p>
+                    <a class="btn btn-outline-ga" asp-controller="Invite" asp-action="Index">Send an invitation</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,18 @@
+@model Programme
+<article class="prog-card">
+    <a asp-controller="Programmes" asp-action="Details" asp-route-id="@Model.Id" tabindex="-1" aria-hidden="true">
+        <img src="@(Model.ImagePath ?? "/images/programmes/education.webp")" alt="" loading="lazy" />
+    </a>
+    <div class="body">
+        <div><span class="tag @(Model.IsUpcoming ? "" : "tag-past")">@Model.Category</span></div>
+        <h3><a asp-controller="Programmes" asp-action="Details" asp-route-id="@Model.Id">@Model.Title</a></h3>
+        <p>@Model.Summary</p>
+        <div class="prog-when mt-2">
+            <div class="date-block"><b>@Model.StartDate.ToString("dd")</b><small>@Model.StartDate.ToString("MMM yyyy")</small></div>
+            <div class="where">
+                <i class="bi bi-geo-alt"></i> @Model.Venue
+                @if (Model.Ngo != null) { <br /><span>by @Model.Ngo.Name</span> }
+            </div>
+        </div>
+    </div>
+</article>

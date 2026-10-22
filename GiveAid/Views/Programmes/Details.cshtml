@@ -1,0 +1,104 @@
+@model ProgrammeDetailsViewModel
+@{
+    var p = Model.Programme;
+    ViewData["Title"] = p.Title;
+}
+<partial name="_PageHead" model="@((p.Title, (string?)p.Summary))" />
+
+<section class="section">
+    <div class="container">
+        <partial name="_Alerts" />
+        @if (ViewData["DraftPreview"] is true)
+        {
+            <div class="alert alert-ga-error" role="status">
+                <i class="bi bi-eye-slash me-2"></i><b>Draft preview.</b> Only admins can see this page. Publish it from the admin panel to show it on the website.
+            </div>
+        }
+        <div class="row g-5">
+            <div class="col-lg-7">
+                <img src="@(p.ImagePath ?? "/images/programmes/education.webp")" alt="" class="w-100 rounded mb-4" style="aspect-ratio:16/10;object-fit:cover" />
+                <div class="prose">@ContentFormatter.ToHtml(p.Details)</div>
+
+                @if (Model.Photos.Count > 0)
+                {
+                    <h2 class="h3 mt-5 mb-3">Photos</h2>
+                    <div class="row g-2">
+                        @foreach (var g in Model.Photos)
+                        {
+                            <div class="col-6 col-md-4"><img src="@g.ImagePath" alt="@g.Title" class="w-100 rounded" style="aspect-ratio:4/3;object-fit:cover" loading="lazy" /></div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <aside class="col-lg-5">
+                <div class="panel mb-4">
+                    <dl class="row mb-0">
+                        <dt class="col-4">Category</dt><dd class="col-8"><span class="tag">@p.Category</span></dd>
+                        <dt class="col-4">When</dt>
+                        <dd class="col-8">@p.StartDate.ToString("dddd, dd MMM yyyy")@(p.EndDate.HasValue && p.EndDate != p.StartDate ? " to " + p.EndDate.Value.ToString("dd MMM yyyy") : "")</dd>
+                        <dt class="col-4">Where</dt><dd class="col-8">@p.Venue</dd>
+                        @if (p.Ngo != null)
+                        {
+                            <dt class="col-4">Run by</dt><dd class="col-8"><a asp-controller="Ngos" asp-action="Details" asp-route-id="@p.Ngo.Id">@p.Ngo.Name</a></dd>
+                        }
+                        <dt class="col-4">Joined</dt><dd class="col-8 mb-0">@Model.InterestCount @(Model.InterestCount == 1 ? "person" : "people")</dd>
+                    </dl>
+                </div>
+
+                @if (!p.IsPublished)
+                {
+                    <div class="panel"><p class="mb-0">Sign-ups open when this programme is published.</p></div>
+                }
+                else if (!p.IsUpcoming)
+                {
+                    <div class="panel"><p class="mb-2 fw-semibold">This programme has been completed.</p><a asp-action="Index">See upcoming programmes</a></div>
+                }
+                else if (Model.AlreadyJoined)
+                {
+                    <div class="panel"><p class="mb-0"><i class="bi bi-check-circle-fill text-success me-1"></i>You have already sent your interest for this programme. The organisers will contact you.</p></div>
+                }
+                else
+                {
+                    <form asp-action="Interest" method="post" class="panel" id="join" novalidate>
+                        <h2 class="panel-title">I want to take part</h2>
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <input type="hidden" asp-for="Form.ProgrammeId" />
+                        <div class="mb-3">
+                            <span class="form-label d-block">I want to join as</span>
+                            <div class="card-type-toggle" role="radiogroup" aria-label="Join as">
+                                <input type="radio" asp-for="Form.ParticipationType" value="Volunteer" id="ptV" /><label for="ptV">Volunteer</label>
+                                <input type="radio" asp-for="Form.ParticipationType" value="Participant" id="ptP" /><label for="ptP">Participant</label>
+                                <input type="radio" asp-for="Form.ParticipationType" value="Sponsor" id="ptS" /><label for="ptS">Sponsor</label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Form.Name" class="form-label">Your name</label>
+                            <input asp-for="Form.Name" class="form-control" autocomplete="name" />
+                            <span asp-validation-for="Form.Name" class="text-danger"></span>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-7">
+                                <label asp-for="Form.Email" class="form-label"></label>
+                                <input asp-for="Form.Email" class="form-control" autocomplete="email" />
+                                <span asp-validation-for="Form.Email" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-5">
+                                <label asp-for="Form.Phone" class="form-label">Phone</label>
+                                <input asp-for="Form.Phone" class="form-control" autocomplete="tel" />
+                                <span asp-validation-for="Form.Phone" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Form.Message" class="form-label">How can you help? <span class="text-secondary fw-normal">(optional)</span></label>
+                            <textarea asp-for="Form.Message" class="form-control" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-ga w-100">Send my interest</button>
+                    </form>
+                }
+                <a class="btn btn-donate w-100 mt-3" asp-controller="Donate" asp-action="Index">Donate to support programmes</a>
+            </aside>
+        </div>
+    </div>
+</section>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

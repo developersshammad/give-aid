@@ -1,0 +1,42 @@
+@model List<GalleryImage>
+@{ ViewData["Title"] = "Gallery"; }
+
+<form asp-action="Upload" method="post" enctype="multipart/form-data" class="panel mb-4">
+    <h2 class="panel-title">Upload a photo</h2>
+    <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label" for="title">Title</label>
+            <input class="form-control" id="title" name="title" required maxlength="150" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="programmeId">Programme</label>
+            <select class="form-select" id="programmeId" name="programmeId" asp-items="ViewBag.Programmes"><option value="">(not linked)</option></select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="image">Image file</label>
+            <input type="file" class="form-control" id="image" name="image" required accept=".jpg,.jpeg,.png,.gif,.webp" />
+        </div>
+        <div class="col-md-3"><button type="submit" class="btn btn-ga w-100"><i class="bi bi-upload me-1"></i>Upload</button></div>
+        <div class="col-12">
+            <label class="form-label" for="caption">Caption (optional)</label>
+            <input class="form-control" id="caption" name="caption" maxlength="300" />
+        </div>
+    </div>
+</form>
+
+<p class="text-secondary">@Model.Count photos</p>
+<div class="admin-gallery">
+    @foreach (var g in Model)
+    {
+        <figure>
+            <img src="@g.ImagePath" alt="@g.Title" loading="lazy" />
+            <figcaption>
+                <b>@g.Title</b>
+                <div class="small text-secondary">@(g.Programme?.Title ?? "Not linked"), @g.UploadedAt.ToString("dd MMM yyyy")</div>
+                <form asp-action="Delete" asp-route-id="@g.Id" method="post" class="mt-2" data-confirm="Delete this photo?">
+                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash me-1"></i>Delete</button>
+                </form>
+            </figcaption>
+        </figure>
+    }
+</div>

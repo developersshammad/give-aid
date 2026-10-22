@@ -1,0 +1,45 @@
+@model List<GalleryImage>
+@{ ViewData["Title"] = "Gallery"; }
+<partial name="_PageHead" model="@(("Gallery", (string?)"Moments from programmes conducted by our NGOs."))" />
+
+<section class="section">
+    <div class="container">
+        @if (Model.Count == 0) { <p class="text-secondary">Photos will be added soon.</p> }
+        <div class="gallery-grid">
+            @foreach (var g in Model)
+            {
+                <figure class="gallery-item">
+                    <button type="button" data-bs-toggle="modal" data-bs-target="#photoModal" data-src="@g.ImagePath" data-title="@g.Title" data-caption="@g.Caption" aria-label="Open photo: @g.Title">
+                        <img src="@g.ImagePath" alt="@g.Title" loading="lazy" />
+                    </button>
+                    <figcaption>@g.Title @if (g.Programme != null) { <small>@g.Programme.Title</small> }</figcaption>
+                </figure>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Enlarged photo -->
+<div class="modal fade" id="photoModal" tabindex="-1" aria-labelledby="photoTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="photoTitle"></h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <img id="photoImg" src="" alt="" class="w-100" />
+            <div class="modal-body"><p id="photoCaption" class="mb-0 text-secondary"></p></div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        document.getElementById("photoModal").addEventListener("show.bs.modal", function (e) {
+            var b = e.relatedTarget;
+            document.getElementById("photoImg").src = b.dataset.src;
+            document.getElementById("photoImg").alt = b.dataset.title;
+            document.getElementById("photoTitle").textContent = b.dataset.title;
+            document.getElementById("photoCaption").textContent = b.dataset.caption || "";
+        });
+    </script>
+}

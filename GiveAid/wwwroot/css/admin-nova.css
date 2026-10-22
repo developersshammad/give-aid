@@ -1,0 +1,314 @@
+/* =====================================================================
+   Give-AID admin - "Nova" night theme (default)
+   A control room for the charity: deep neem-green space, glass panels,
+   lantern-gold for actions, aurora-mint for live data. A slow 3D
+   constellation (js/admin3d.js) moves behind everything.
+   All rules sit under html.nova, so "Day mode" (the original light
+   admin.css look) comes back by simply removing that class.
+   ===================================================================== */
+html.nova {
+    --nv-void: #03100D;
+    --nv-deep: #072019;
+    --nv-glass: rgba(10, 38, 31, .62);
+    --nv-glass-2: rgba(16, 52, 43, .72);
+    --nv-line: rgba(140, 230, 200, .14);
+    --nv-line-2: rgba(140, 230, 200, .26);
+    --nv-ink: #E7F3EE;
+    --nv-muted: #93B5A8;
+    --nv-lantern: #F5B342;
+    --nv-lantern-2: #FFCB6B;
+    --nv-aurora: #45E0B4;
+    --nv-danger: #FF7A6B;
+    --nv-glow: 0 0 0 1px var(--nv-line), 0 24px 60px -30px rgba(0, 0, 0, .9);
+
+    --bs-body-color: var(--nv-ink);
+    --bs-body-bg: var(--nv-void);
+    --bs-secondary-color: var(--nv-muted);
+    --bs-border-color: var(--nv-line-2);
+    --bs-link-color: var(--nv-aurora);
+    --bs-link-color-rgb: 69, 224, 180;
+    --bs-link-hover-color: #8CF2D4;
+    --bs-link-hover-color-rgb: 140, 242, 212;
+    --bs-heading-color: var(--nv-ink);
+    --bs-focus-ring-color: rgba(245, 179, 66, .45);
+    --ga-ink: var(--nv-ink);
+    --ga-muted: var(--nv-muted);
+    --ga-line: var(--nv-line-2);
+    color-scheme: dark;
+}
+html.nova body.admin { background: radial-gradient(120% 80% at 80% -10%, #0C3328 0%, var(--nv-void) 55%) fixed, var(--nv-void); color: var(--nv-ink); }
+html.nova .text-secondary { color: var(--nv-muted) !important; }
+html.nova .text-success { color: var(--nv-aurora) !important; }
+html.nova ::selection { background: rgba(245, 179, 66, .35); color: #fff; }
+html.nova :focus-visible { outline: 2px solid var(--nv-lantern); outline-offset: 2px; }
+
+/* ---------- the 3D layer ---------- */
+.nova-space { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0; transition: opacity 1.2s ease; }
+.nova-space.on { opacity: 1; }
+.nova-space canvas { width: 100% !important; height: 100% !important; display: block; }
+html:not(.nova) .nova-space { display: none; }
+html.nova .admin-shell { position: relative; z-index: 1; }
+
+/* ---------- sidebar ---------- */
+html.nova .admin-side-wrap { background: transparent; }
+@media (min-width: 992px) {
+    html.nova .admin-side-wrap { background: linear-gradient(180deg, rgba(6, 30, 24, .82), rgba(3, 16, 13, .9)); border-right: 1px solid var(--nv-line); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+}
+@media (max-width: 991.98px) { html.nova .admin-side.offcanvas-lg { background: rgba(4, 20, 16, .97); border-right: 1px solid var(--nv-line); } }
+html.nova .admin-brand { color: #fff; }
+html.nova .admin-brand small { color: var(--nv-muted); }
+html.nova .brand-mark { background: radial-gradient(circle at 35% 30%, #1D6B54, #072019); color: var(--nv-lantern); box-shadow: 0 0 0 1px var(--nv-line-2), 0 0 22px rgba(245, 179, 66, .35); }
+html.nova .admin-menu a { position: relative; color: #C4DCD2; transition: background .2s, color .2s; }
+html.nova .admin-menu a i { color: #6E9688; transition: color .2s; }
+html.nova .admin-menu a:hover { background: rgba(69, 224, 180, .07); color: #fff; }
+html.nova .admin-menu a:hover i { color: var(--nv-aurora); }
+html.nova .admin-menu a.active { background: linear-gradient(90deg, rgba(245, 179, 66, .16), rgba(245, 179, 66, .02)); color: #fff; box-shadow: inset 0 0 0 1px rgba(245, 179, 66, .22); }
+html.nova .admin-menu a.active i { color: var(--nv-lantern); }
+html.nova .admin-menu a.active::before { content: ""; position: absolute; left: -.75rem; top: .45rem; bottom: .45rem; width: 3px; border-radius: 0 3px 3px 0; background: var(--nv-lantern); box-shadow: 0 0 14px var(--nv-lantern); }
+html.nova .admin-foot { border-top-color: var(--nv-line); }
+html.nova .admin-foot a, html.nova .admin-foot button { color: #C4DCD2; }
+html.nova .admin-foot a:hover, html.nova .admin-foot button:hover { color: var(--nv-lantern); }
+
+/* ---------- top bar ---------- */
+html.nova .admin-top { background: rgba(4, 20, 16, .66); border-bottom: 1px solid var(--nv-line); backdrop-filter: blur(16px) saturate(140%); -webkit-backdrop-filter: blur(16px) saturate(140%); }
+html.nova .admin-top h1 { color: #fff; }
+.hud { display: flex; align-items: center; gap: .5rem; }
+.hud-clock { font-variant-numeric: tabular-nums; font-weight: 700; font-size: .9rem; color: var(--ga-muted); white-space: nowrap; }
+.hud-clock .dot { display: inline-block; width: .5rem; height: .5rem; border-radius: 50%; background: #2FB383; margin-right: .4rem; vertical-align: 1px; box-shadow: 0 0 0 0 rgba(47, 179, 131, .6); animation: hud-pulse 2.4s infinite; }
+html.nova .hud-clock { color: var(--nv-muted); }
+html.nova .hud-clock .dot { background: var(--nv-aurora); }
+@keyframes hud-pulse { 0% { box-shadow: 0 0 0 0 rgba(69, 224, 180, .55); } 70% { box-shadow: 0 0 0 .5rem rgba(69, 224, 180, 0); } 100% { box-shadow: 0 0 0 0 rgba(69, 224, 180, 0); } }
+.hud-btn { display: inline-flex; align-items: center; gap: .4rem; border: 1px solid var(--ga-line); background: #fff; color: var(--ga-ink); border-radius: .55rem; padding: .32rem .6rem; font-size: .85rem; font-weight: 600; line-height: 1.2; }
+.hud-btn kbd { background: rgba(0, 0, 0, .07); color: inherit; font-size: .72rem; padding: .05rem .3rem; border-radius: .25rem; }
+.hud-btn:hover { border-color: var(--ga-green-2); }
+html.nova .hud-btn { background: rgba(255, 255, 255, .04); color: var(--nv-ink); border-color: var(--nv-line-2); }
+html.nova .hud-btn kbd { background: rgba(255, 255, 255, .1); }
+html.nova .hud-btn:hover { border-color: var(--nv-lantern); color: #fff; box-shadow: 0 0 18px -6px var(--nv-lantern); }
+@media (max-width: 767.98px) { .hud-btn .lbl, .hud-btn kbd { display: none; } }
+
+/* ---------- headings, text, panels ---------- */
+html.nova h1, html.nova h2, html.nova h3, html.nova h4, html.nova h5, html.nova h6 { color: var(--nv-ink); }
+html.nova .panel, html.nova .dash-card, html.nova .table-wrap, html.nova .admin-gallery figure, html.nova .pl-card, html.nova .pl-head, html.nova .pl-how > div {
+    background: var(--nv-glass); border: 1px solid var(--nv-line); box-shadow: 0 24px 60px -34px rgba(0, 0, 0, .95), inset 0 1px 0 rgba(255, 255, 255, .04);
+    backdrop-filter: blur(12px) saturate(130%); -webkit-backdrop-filter: blur(12px) saturate(130%); color: var(--nv-ink);
+}
+html.nova .panel-title, html.nova .dash-card-head h2 { color: #fff; }
+html.nova .dash-card-head p, html.nova .form-text { color: var(--nv-muted); }
+html.nova .prose li::marker { color: var(--nv-lantern); }
+html.nova .markup-help { background: rgba(69, 224, 180, .07); border: 1px solid var(--nv-line); color: var(--nv-ink); }
+html.nova .markup-help code, html.nova code { color: var(--nv-lantern-2); background: rgba(255, 255, 255, .06); }
+html.nova .reply-bubble { background: rgba(69, 224, 180, .07); border-left-color: var(--nv-aurora); }
+html.nova hr { border-color: var(--nv-line-2); }
+
+/* ---------- forms ---------- */
+html.nova .form-label { color: #D3E7DF; }
+html.nova .form-control, html.nova .form-select, html.nova .input-group-text {
+    background-color: rgba(2, 14, 11, .55); border-color: rgba(140, 230, 200, .22); color: var(--nv-ink);
+}
+html.nova .form-control::placeholder { color: #6B8F82; }
+html.nova .form-control:focus, html.nova .form-select:focus { background-color: rgba(2, 14, 11, .75); border-color: var(--nv-lantern); color: #fff; box-shadow: 0 0 0 .2rem rgba(245, 179, 66, .22), 0 0 24px -8px rgba(245, 179, 66, .55); }
+html.nova .form-control:disabled { background-color: rgba(255, 255, 255, .04); }
+html.nova .form-check-input { background-color: rgba(2, 14, 11, .6); border-color: rgba(140, 230, 200, .35); }
+html.nova .form-check-input:checked { background-color: var(--nv-lantern); border-color: var(--nv-lantern); }
+html.nova input[type=date]::-webkit-calendar-picker-indicator { filter: invert(1) opacity(.7); }
+html.nova .field-validation-error, html.nova .text-danger { color: var(--nv-danger) !important; }
+html.nova .input-validation-error { border-color: var(--nv-danger) !important; }
+
+/* ---------- buttons ---------- */
+html.nova .btn-ga {
+    --bs-btn-color: #1B1405; --bs-btn-bg: var(--nv-lantern); --bs-btn-border-color: var(--nv-lantern);
+    --bs-btn-hover-color: #1B1405; --bs-btn-hover-bg: var(--nv-lantern-2); --bs-btn-hover-border-color: var(--nv-lantern-2);
+    --bs-btn-active-color: #1B1405; --bs-btn-active-bg: #E59E22; --bs-btn-disabled-bg: #5D5236; --bs-btn-disabled-border-color: #5D5236; --bs-btn-disabled-color: #B9AE93;
+    font-weight: 700; box-shadow: 0 8px 26px -12px rgba(245, 179, 66, .8);
+}
+html.nova .btn-outline-ga {
+    --bs-btn-color: #CFF5E8; --bs-btn-border-color: rgba(69, 224, 180, .45); --bs-btn-hover-color: #03100D; --bs-btn-hover-bg: var(--nv-aurora);
+    --bs-btn-hover-border-color: var(--nv-aurora); --bs-btn-active-bg: var(--nv-aurora); --bs-btn-active-color: #03100D;
+}
+html.nova .btn-outline-danger { --bs-btn-color: var(--nv-danger); --bs-btn-border-color: rgba(255, 122, 107, .5); --bs-btn-hover-bg: var(--nv-danger); --bs-btn-hover-border-color: var(--nv-danger); --bs-btn-hover-color: #200604; }
+html.nova .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+
+/* ---------- tables ---------- */
+html.nova .table-ga { --bs-table-bg: transparent; --bs-table-color: var(--nv-ink); --bs-table-border-color: var(--nv-line); --bs-table-hover-bg: rgba(69, 224, 180, .05); }
+html.nova .table-ga thead th { background: rgba(69, 224, 180, .08); color: var(--nv-aurora); border-bottom: 1px solid var(--nv-line-2); }
+html.nova .table-ga tbody tr { transition: background .15s; }
+html.nova .table-ga tbody tr:hover > * { background: rgba(69, 224, 180, .05); }
+html.nova .thumb { border-color: var(--nv-line-2); background: rgba(255, 255, 255, .05); }
+
+/* ---------- labels and alerts ---------- */
+html.nova .tag { background: rgba(69, 224, 180, .12); color: #9FF0D6; }
+html.nova .status-open { background: rgba(245, 179, 66, .16); color: var(--nv-lantern-2); }
+html.nova .status-answered { background: rgba(69, 224, 180, .14); color: #9FF0D6; }
+html.nova .alert-ga { background: rgba(69, 224, 180, .1); border-left-color: var(--nv-aurora); color: var(--nv-ink); }
+html.nova .alert-ga-error { background: rgba(255, 122, 107, .1); border-left-color: var(--nv-danger); color: var(--nv-ink); }
+html.nova .filter-pills a { background: transparent; color: var(--nv-ink); border-color: var(--nv-line-2); }
+html.nova .filter-pills a.active { background: var(--nv-lantern); border-color: var(--nv-lantern); color: #1B1405; }
+
+/* ---------- dashboard ---------- */
+html.nova .dash-hero { background: linear-gradient(115deg, rgba(14, 64, 50, .88), rgba(8, 36, 29, .78) 55%, rgba(60, 46, 12, .7)); border: 1px solid rgba(245, 179, 66, .22);
+    box-shadow: 0 30px 70px -40px rgba(0, 0, 0, .95), inset 0 1px 0 rgba(255, 255, 255, .06); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+html.nova .dash-hero::after { background: radial-gradient(circle, rgba(245, 179, 66, .22), transparent 62%); top: -12rem; right: -8rem; width: 30rem; height: 30rem; }
+html.nova .dash-hero::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+    background-image: linear-gradient(rgba(140, 230, 200, .07) 1px, transparent 1px), linear-gradient(90deg, rgba(140, 230, 200, .07) 1px, transparent 1px);
+    background-size: 28px 28px; mask-image: linear-gradient(90deg, transparent, #000 60%); -webkit-mask-image: linear-gradient(90deg, transparent, #000 60%); }
+html.nova .dash-hero p { color: #B9D6CA; }
+html.nova .dash-actions a { background: rgba(255, 255, 255, .06); border-color: var(--nv-line-2); }
+html.nova .dash-actions a:hover { background: rgba(69, 224, 180, .14); border-color: var(--nv-aurora); }
+html.nova .dash-actions a.primary { background: var(--nv-lantern); border-color: var(--nv-lantern); color: #1B1405; box-shadow: 0 0 26px -8px var(--nv-lantern); }
+html.nova .dash-actions .count { background: var(--nv-danger); color: #200604; }
+
+html.nova .kpi, html.nova .kpi-mini a { position: relative; overflow: hidden; background: var(--nv-glass); border: 1px solid var(--nv-line); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); color: var(--nv-ink); }
+html.nova .kpi::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .25s;
+    background: radial-gradient(18rem circle at var(--mx, 50%) var(--my, 50%), rgba(245, 179, 66, .14), transparent 60%); }
+html.nova a.kpi:hover { border-color: rgba(245, 179, 66, .45); box-shadow: 0 18px 40px -24px rgba(0, 0, 0, .9), 0 0 30px -14px var(--nv-lantern); }
+html.nova a.kpi:hover::after { opacity: 1; }
+html.nova .kpi-icon { background: rgba(69, 224, 180, .12); color: var(--nv-aurora); box-shadow: inset 0 0 0 1px rgba(69, 224, 180, .25); }
+html.nova .kpi-icon.gold { background: rgba(245, 179, 66, .14); color: var(--nv-lantern); box-shadow: inset 0 0 0 1px rgba(245, 179, 66, .3); }
+html.nova .kpi-icon.alert { background: rgba(255, 122, 107, .14); color: var(--nv-danger); box-shadow: inset 0 0 0 1px rgba(255, 122, 107, .3); }
+html.nova .kpi-label, html.nova .kpi-sub { color: var(--nv-muted); }
+html.nova .kpi-value { color: #fff; text-shadow: 0 0 24px rgba(69, 224, 180, .25); }
+html.nova .kpi-sub b { color: var(--nv-aurora); }
+html.nova .kpi-sub .warn { color: var(--nv-danger); }
+html.nova .kpi-mini a { color: var(--nv-muted); }
+html.nova .kpi-mini a:hover { border-color: var(--nv-aurora); color: #fff; }
+html.nova .kpi-mini b { color: #fff; }
+html.nova .kpi-mini i { color: var(--nv-aurora); }
+html.nova .dash-total { color: #fff; }
+html.nova .dash-total small { color: var(--nv-muted); }
+
+html.nova .wk-chart .grid line { stroke: rgba(140, 230, 200, .1); }
+html.nova .wk-chart .grid text, html.nova .wk-chart .xlab { fill: #7FA394; }
+html.nova .wk-chart .bar { fill: #2FB383; }
+html.nova .wk-chart .bar.now { fill: var(--nv-lantern); filter: drop-shadow(0 0 6px rgba(245, 179, 66, .7)); }
+html.nova .wk-chart .col:hover .bar, html.nova .wk-chart .col:focus .bar { fill: var(--nv-aurora); filter: drop-shadow(0 0 6px rgba(69, 224, 180, .7)); }
+html.nova .chart-tip { background: #E7F3EE; color: #03100D; }
+html.nova .chart-key { color: var(--nv-muted); }
+html.nova .chart-key span::before { background: #2FB383; }
+html.nova .chart-key span.now::before { background: var(--nv-lantern); }
+html.nova .dash-card details summary { color: var(--nv-aurora); }
+html.nova .dash-card details td, html.nova .dash-card details th { border-bottom-color: var(--nv-line); }
+html.nova .cause-bar .name, html.nova .cause-bar .val { color: var(--nv-ink); }
+html.nova .cause-bar .name i { color: var(--nv-aurora); }
+html.nova .cause-bar .val small { color: var(--nv-muted); }
+html.nova .cause-bar .track { background: rgba(255, 255, 255, .06); }
+html.nova .cause-bar .fill { background: linear-gradient(90deg, #1E8E6B, var(--nv-aurora)); box-shadow: 0 0 12px rgba(69, 224, 180, .45); }
+html.nova .queue li { border-bottom-color: var(--nv-line); }
+html.nova .queue .q-main b { color: var(--nv-ink); }
+html.nova .queue .q-main span { color: var(--nv-muted); }
+html.nova .queue .avatar, html.nova .donor-cell .avatar { background: rgba(69, 224, 180, .14); color: #9FF0D6; box-shadow: inset 0 0 0 1px rgba(69, 224, 180, .3); }
+html.nova .queue .when { background: rgba(245, 179, 66, .14); color: var(--nv-lantern-2); box-shadow: inset 0 0 0 1px rgba(245, 179, 66, .3); }
+html.nova .queue .when small { color: var(--nv-muted); }
+html.nova .queue .pill { background: rgba(69, 224, 180, .14); color: #9FF0D6; }
+html.nova .queue .pill.soon { background: rgba(245, 179, 66, .16); color: var(--nv-lantern-2); }
+html.nova .queue .pill.age { background: rgba(255, 122, 107, .16); color: var(--nv-danger); }
+html.nova .empty-ok { color: var(--nv-aurora); }
+
+/* one orchestrated entrance on the dashboard (first visit of the session only) */
+html.nova .boot .kpi, html.nova .boot .dash-card, html.nova .boot .dash-hero { animation: nv-rise .7s cubic-bezier(.2, .7, .2, 1) both; }
+html.nova .boot .kpi:nth-child(2) { animation-delay: .06s; } html.nova .boot .kpi:nth-child(3) { animation-delay: .12s; } html.nova .boot .kpi:nth-child(4) { animation-delay: .18s; }
+html.nova .boot .wk-chart .bar { transform-box: fill-box; transform-origin: bottom; animation: nv-grow .9s .25s cubic-bezier(.2, .7, .2, 1) both; }
+html.nova .boot .cause-bar .fill { transform-origin: left; animation: nv-fill 1s .3s cubic-bezier(.2, .7, .2, 1) both; }
+@keyframes nv-rise { from { opacity: 0; transform: translateY(14px); } }
+@keyframes nv-grow { from { transform: scaleY(0); } }
+@keyframes nv-fill { from { transform: scaleX(0); } }
+
+/* ---------- AI planner ---------- */
+html.nova .pl-hero { background: linear-gradient(115deg, rgba(14, 64, 50, .9), rgba(20, 40, 70, .75)); border: 1px solid rgba(69, 224, 180, .25); }
+html.nova .pl-mode { background: rgba(69, 224, 180, .12); color: #9FF0D6; }
+html.nova .pl-chip { background: rgba(255, 255, 255, .04); border-color: var(--nv-line-2); color: var(--nv-ink); }
+html.nova .pl-chip:hover, html.nova .pl-chip:focus-visible { background: rgba(245, 179, 66, .12); border-color: var(--nv-lantern); }
+html.nova .pl-examples > span, html.nova .pl-how small, html.nova .pl-expl, html.nova .pl-decided, html.nova .pl-list small, html.nova .pl-facts dt, html.nova .pl-weather small, html.nova .pl-draft-banner span, html.nova .pl-raw summary span { color: var(--nv-muted); }
+html.nova .pl-how b, html.nova .pl-card-head h2, html.nova .pl-goal-quote, html.nova .pl-facts dd, html.nova .pl-weather span, html.nova .pl-draft-banner b, html.nova .pl-summary b { color: var(--nv-ink); }
+html.nova .pl-how span, html.nova .st-done .pl-num, html.nova .st-approved .pl-num { background: var(--nv-aurora); border-color: var(--nv-aurora); color: #03100D; }
+html.nova .pl-ok { background: rgba(69, 224, 180, .14); color: #9FF0D6; }
+html.nova .pl-wait { background: rgba(245, 179, 66, .16); color: var(--nv-lantern-2); }
+html.nova .pl-warn { background: rgba(255, 160, 60, .16); color: #FFB878; }
+html.nova .pl-off { background: rgba(255, 255, 255, .07); color: var(--nv-muted); }
+html.nova .pl-bad { background: rgba(255, 122, 107, .16); color: var(--nv-danger); }
+html.nova .pl-summary { background: rgba(69, 224, 180, .07); border-left-color: var(--nv-aurora); }
+html.nova .pl-summary.bad { background: rgba(255, 122, 107, .08); border-left-color: var(--nv-danger); }
+html.nova .pl-draft-banner { background: rgba(245, 179, 66, .08); border-color: rgba(245, 179, 66, .5); }
+html.nova .pl-draft-banner.live { background: rgba(69, 224, 180, .08); border-color: rgba(69, 224, 180, .45); }
+html.nova .pl-steps::before { background: linear-gradient(var(--nv-aurora), rgba(69, 224, 180, .05)); opacity: .45; }
+html.nova .pl-num { background: var(--nv-deep); border-color: var(--nv-line-2); color: var(--nv-muted); }
+html.nova .st-pending .pl-num { background: var(--nv-lantern); border-color: var(--nv-lantern); color: #1B1405; box-shadow: 0 0 16px var(--nv-lantern); }
+html.nova .st-needsreview .pl-num { background: var(--nv-deep); border-color: #FFA03C; color: #FFB878; }
+html.nova .st-rejected .pl-num, html.nova .st-failed .pl-num { background: rgba(255, 255, 255, .05); }
+html.nova .pl-step.proposal .pl-card { border-color: rgba(245, 179, 66, .45); box-shadow: 0 0 34px -18px var(--nv-lantern); }
+html.nova .pl-tag { color: var(--nv-lantern); }
+html.nova .pl-facts > div, html.nova .pl-list li { background: rgba(255, 255, 255, .03); border-color: var(--nv-line); }
+html.nova .pl-list li.top { border-color: rgba(69, 224, 180, .45); background: rgba(69, 224, 180, .07); }
+html.nova .pl-assume li { color: var(--nv-lantern-2); }
+html.nova .pl-weather > div { background: linear-gradient(180deg, rgba(80, 160, 220, .12), rgba(255, 255, 255, .02)); border-color: rgba(120, 190, 240, .2); }
+html.nova .pl-weather b { color: #9CCBF0; }
+html.nova .pl-budget td, html.nova .pl-budget th { border-bottom-color: var(--nv-line); }
+html.nova .pl-budget tr.total td, html.nova .pl-budget tfoot th { color: var(--nv-lantern-2); border-top-color: var(--nv-line-2); }
+html.nova .pl-preview { border-color: var(--nv-line-2); background: rgba(2, 14, 11, .4); }
+html.nova .pl-preview-top { background: linear-gradient(120deg, #0F4535, #14324F); }
+html.nova .pl-vol { border-color: var(--nv-line-2); }
+html.nova .pl-vol:has(input:checked) { border-color: var(--nv-aurora); background: rgba(69, 224, 180, .08); }
+html.nova .pl-vol small { color: var(--nv-muted); }
+html.nova .pl-raw summary { color: var(--nv-aurora); }
+html.nova .pl-raw pre { background: rgba(0, 0, 0, .35); color: #BFE6D8; }
+html.nova .pl-busy { background: rgba(2, 10, 8, .7); }
+html.nova .pl-busy-card { background: rgba(8, 30, 24, .95); border: 1px solid var(--nv-line-2); color: var(--nv-ink); }
+html.nova .pl-busy-card li.now { color: #fff; }
+html.nova .pl-busy-card li.done { color: var(--nv-aurora); }
+html.nova .pl-busy-card li.done::before { background: var(--nv-aurora); }
+html.nova .pl-spinner { border-color: rgba(255, 255, 255, .1); border-top-color: var(--nv-lantern); }
+
+/* ---------- command palette (Ctrl + K) ---------- */
+.cmdk { position: fixed; inset: 0; z-index: 3000; display: grid; place-items: start center; padding: 12vh 1rem 1rem; background: rgba(2, 10, 8, .55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.cmdk[hidden] { display: none; }
+.cmdk-box { width: 100%; max-width: 36rem; border-radius: 1rem; overflow: hidden; background: #fff; color: #17231F; box-shadow: 0 40px 90px -30px rgba(0, 0, 0, .7); border: 1px solid #CFDDD5; animation: cmdk-in .18s ease-out; }
+html.nova .cmdk-box { background: rgba(7, 28, 23, .96); color: var(--nv-ink); border-color: var(--nv-line-2); box-shadow: 0 40px 90px -30px #000, 0 0 60px -30px var(--nv-aurora); }
+@keyframes cmdk-in { from { opacity: 0; transform: translateY(-8px) scale(.98); } }
+.cmdk-search { display: flex; align-items: center; gap: .6rem; padding: .85rem 1rem; border-bottom: 1px solid #E3ECE7; }
+html.nova .cmdk-search { border-bottom-color: var(--nv-line); }
+.cmdk-search i { font-size: 1.1rem; color: #1E6B52; }
+html.nova .cmdk-search i { color: var(--nv-lantern); }
+.cmdk-search input { flex: 1; border: 0; background: none; outline: none; font-size: 1.05rem; color: inherit; }
+.cmdk-search input::placeholder { color: #7D8F87; }
+.cmdk-list { list-style: none; margin: 0; padding: .4rem; max-height: 52vh; overflow-y: auto; }
+.cmdk-group { font-size: .78rem; font-weight: 700; color: #6B7C75; padding: .55rem .7rem .25rem; }
+html.nova .cmdk-group { color: var(--nv-muted); }
+.cmdk-item { display: flex; align-items: center; gap: .7rem; padding: .55rem .7rem; border-radius: .55rem; cursor: pointer; }
+.cmdk-item i { width: 1.2rem; text-align: center; color: #1E6B52; }
+html.nova .cmdk-item i { color: var(--nv-aurora); }
+.cmdk-item small { margin-left: auto; color: #6B7C75; font-size: .78rem; }
+html.nova .cmdk-item small { color: var(--nv-muted); }
+.cmdk-item[aria-selected="true"] { background: #E4EEE8; }
+html.nova .cmdk-item[aria-selected="true"] { background: rgba(245, 179, 66, .14); box-shadow: inset 0 0 0 1px rgba(245, 179, 66, .3); }
+html.nova .cmdk-item[aria-selected="true"] i { color: var(--nv-lantern); }
+.cmdk-empty { padding: 1rem; color: #6B7C75; }
+.cmdk-foot { display: flex; gap: 1rem; padding: .5rem 1rem; font-size: .78rem; color: #6B7C75; border-top: 1px solid #E3ECE7; }
+html.nova .cmdk-foot { color: var(--nv-muted); border-top-color: var(--nv-line); }
+.cmdk-foot kbd { background: rgba(0, 0, 0, .08); color: inherit; font-size: .72rem; }
+html.nova .cmdk-foot kbd { background: rgba(255, 255, 255, .1); }
+
+/* ---------- login: "Nova" gateway ---------- */
+html.nova body:has(.admin-login) { background: radial-gradient(90% 70% at 50% 110%, #0E3B2E, var(--nv-void) 60%) fixed, var(--nv-void); }
+html.nova .admin-login { background: transparent; position: relative; z-index: 1; }
+html.nova .admin-login::before { width: 70rem; height: 70rem; background: repeating-radial-gradient(circle, rgba(140, 230, 200, .045) 0 1px, transparent 1px 3.2rem); animation: nv-spin 120s linear infinite; }
+@keyframes nv-spin { to { transform: rotate(360deg); } }
+html.nova .admin-login .panel { z-index: 2; background: rgba(7, 28, 23, .72); border: 1px solid var(--nv-line-2); box-shadow: 0 50px 100px -40px #000, 0 0 80px -40px var(--nv-aurora); }
+html.nova .admin-login .panel::before { content: ""; position: absolute; left: 1.25rem; right: 1.25rem; top: -1px; height: 1px; background: linear-gradient(90deg, transparent, var(--nv-lantern), transparent); }
+.login-scan { position: absolute; left: 0; right: 0; height: 2px; top: 0; pointer-events: none; border-radius: 2px; opacity: 0;
+    background: linear-gradient(90deg, transparent, var(--nv-aurora, #45E0B4), transparent); box-shadow: 0 0 18px var(--nv-aurora, #45E0B4); }
+html.nova .login-scan { animation: nv-scan 1.6s .2s ease-in-out 1 both; }
+@keyframes nv-scan { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+.login-status { font-size: .82rem; color: #56665F; display: flex; align-items: center; gap: .45rem; margin-top: .9rem; }
+html.nova .login-status { color: var(--nv-muted); }
+.login-status .dot { width: .5rem; height: .5rem; border-radius: 50%; background: #2FB383; animation: hud-pulse 2.4s infinite; }
+html.nova .login-status .dot { background: var(--nv-aurora); }
+.theme-switch-fixed { position: fixed; top: 1rem; right: 1rem; z-index: 5; }
+
+@media (prefers-reduced-motion: reduce) {
+    .nova-space { transition: none; }
+    html.nova .boot .kpi, html.nova .boot .dash-card, html.nova .boot .dash-hero, html.nova .boot .wk-chart .bar, html.nova .boot .cause-bar .fill,
+    html.nova .admin-login::before, html.nova .login-scan, .hud-clock .dot, .login-status .dot, .cmdk-box { animation: none !important; }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    html.nova .panel, html.nova .dash-card, html.nova .table-wrap, html.nova .kpi, html.nova .pl-card { background: rgba(8, 30, 24, .96); }
+}
+.cmdk-search input:focus-visible { outline: none; }

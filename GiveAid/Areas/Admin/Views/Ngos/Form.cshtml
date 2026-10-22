@@ -1,0 +1,65 @@
+@model Ngo
+@{ ViewData["Title"] = Model.Id == 0 ? "Add NGO" : "Edit NGO"; }
+
+<form asp-action="@(Model.Id == 0 ? "Create" : "Edit")" asp-route-id="@(Model.Id == 0 ? null : Model.Id)" method="post" enctype="multipart/form-data" class="panel" style="max-width:56rem" novalidate>
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="row g-3">
+        <div class="col-md-8">
+            <label asp-for="Name" class="form-label">NGO name</label>
+            <input asp-for="Name" class="form-control" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="RegistrationNo" class="form-label"></label>
+            <input asp-for="RegistrationNo" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="FocusArea" class="form-label"></label>
+            <input asp-for="FocusArea" class="form-control" list="focusList" />
+            <datalist id="focusList"><option>Children</option><option>Education</option><option>Disabled</option><option>Women</option><option>Youth</option><option>Elderly</option><option>Health Care</option></datalist>
+            <span asp-validation-for="FocusArea" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="City" class="form-label"></label>
+            <input asp-for="City" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="EstablishedYear" class="form-label"></label>
+            <input asp-for="EstablishedYear" class="form-control" type="number" />
+            <span asp-validation-for="EstablishedYear" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="ContactPerson" class="form-label"></label>
+            <input asp-for="ContactPerson" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Email" class="form-label">E-mail</label>
+            <input asp-for="Email" class="form-control" type="email" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Phone" class="form-label"></label>
+            <input asp-for="Phone" class="form-control" />
+        </div>
+        <div class="col-12">
+            <label asp-for="Website" class="form-label"></label>
+            <input asp-for="Website" class="form-control" type="url" placeholder="https://" />
+        </div>
+        <div class="col-12">
+            <label asp-for="Description" class="form-label"></label>
+            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+        <div class="col-12">
+            <label class="form-label" for="logo">Logo (optional)</label>
+            @if (!string.IsNullOrEmpty(Model.LogoPath)) { <div class="mb-2"><img src="@Model.LogoPath" alt="Current logo" class="thumb" /></div> }
+            <input type="file" name="logo" id="logo" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" />
+            @Html.ValidationMessage("logo", new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-ga">Save</button>
+        <a asp-action="Index" class="btn btn-outline-ga">Cancel</a>
+    </div>
+</form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

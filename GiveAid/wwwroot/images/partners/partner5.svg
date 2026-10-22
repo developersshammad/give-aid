@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120" width="320" height="120">
+<rect width="320" height="120" fill="#ffffff"/>
+<g transform="translate(20,32) scale(3.5)" fill="#A15B36">
+  <path d="M1.828 8.9 8.9 1.827a4 4 0 1 1 5.657 5.657l-7.07 7.071A4 4 0 1 1 1.827 8.9Zm9.128.771 2.893-2.893a3 3 0 1 0-4.243-4.242L6.713 5.429z"/>
+</g>
+<text x="92" y="62" font-family="Trebuchet MS, Segoe UI, Arial, sans-serif" font-size="30" font-weight="700" fill="#A15B36">Sindh</text>
+<text x="93" y="86" font-family="Trebuchet MS, Segoe UI, Arial, sans-serif" font-size="15" letter-spacing="1" fill="#56665F">Pharma</text>
+</svg>

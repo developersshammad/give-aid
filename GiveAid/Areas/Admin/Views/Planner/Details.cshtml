@@ -1,0 +1,269 @@
+@model PlannerDetailsViewModel
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@using System.Globalization
+@using GiveAid.Services.Planner
+@{
+    ViewData["Title"] = "AI Planner · Plan #" + Model.Session.Id;
+    var s = Model.Session;
+    var p = Model.Programme;
+    bool open = Model.Steps.Any(x => x.RequiresApproval && PlannerService.IsOpen(x));
+}
+@functions {
+    static JsonNode? J(string? json) { try { return string.IsNullOrEmpty(json) ? null : JsonNode.Parse(json); } catch { return null; } }
+    static string? Str(JsonNode? n, string k) => n?[k] is JsonValue v ? (v.TryGetValue<string>(out var s) ? s : v.ToString()) : null;
+    static string Day(string? iso) => DateTime.TryParse(iso, CultureInfo.InvariantCulture, DateTimeStyles.None, out var d) ? d.ToString("ddd d MMM yyyy") : (iso ?? "—");
+    static string Money(JsonNode? n) => decimal.TryParse(n?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var d) ? ContentFormatter.Rupees(d) : "—";
+    static string Pretty(string? json) { try { return JsonNode.Parse(json ?? "null")?.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) ?? ""; } catch { return json ?? ""; } }
+}
+
+<!-- ===== Goal + status ===== -->
+<section class="pl-head">
+    <div class="pl-goal-quote"><i class="bi bi-quote"></i>@s.Goal</div>
+    <div class="pl-meta">
+        <partial name="_Status" model="s.Status" />
+        <span class="pl-mode pl-mode-@s.Mode.ToLower()"><i class="bi bi-@(s.Mode == "Demo" ? "cpu" : "stars")"></i>@(s.Mode == "Demo" ? "Demo mode" : s.Mode + " AI")</span>
+        <span class="text-secondary small">by @s.CreatedBy · @s.CreatedAt.ToString("dd MMM yyyy, HH:mm")</span>
+        <span class="ms-auto d-flex gap-2">
+            @if (open)
+            {
+                <form asp-action="Cancel" asp-route-id="@s.Id" method="post" data-confirm="Cancel this plan? Proposals still waiting will be rejected.">
+                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg me-1"></i>Cancel plan</button>
+                </form>
+            }
+            <a class="btn btn-sm btn-outline-ga" asp-action="Index"><i class="bi bi-plus-lg me-1"></i>New plan</a>
+        </span>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(s.Summary))
+{
+    <div class="pl-summary @(s.Status == "Failed" ? "bad" : "")">
+        <b>@(s.Status == "Failed" ? "Problem" : "Planner's summary")</b>
+        <p>@s.Summary</p>
+        @if (s.Status == "Failed")
+        {
+            <p class="small mb-0">Tip: check the API key and model in appsettings.json, or set <code>"Provider": "Demo"</code> to plan without AI.</p>
+        }
+    </div>
+}
+
+<!-- ===== The draft programme, once approved ===== -->
+@if (p != null)
+{
+    <section class="pl-draft-banner @(p.IsPublished ? "live" : "")">
+        <div>
+            <b>@p.Title</b>
+            <span>@(p.IsPublished ? "Published — visible on the website" : "Hidden draft — only admins can see it")</span>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-sm btn-outline-ga" asp-area="" asp-controller="Programmes" asp-action="Details" asp-route-id="@p.Id" target="_blank"><i class="bi bi-eye me-1"></i>@(p.IsPublished ? "View" : "Preview")</a>
+            <a class="btn btn-sm btn-outline-ga" asp-controller="Programmes" asp-action="Edit" asp-route-id="@p.Id"><i class="bi bi-pencil me-1"></i>Edit / add picture</a>
+            @if (!p.IsPublished)
+            {
+                <form asp-action="Publish" asp-route-id="@s.Id" method="post" data-confirm="Publish &quot;@p.Title&quot; on the website?">
+                    <button class="btn btn-sm btn-ga"><i class="bi bi-globe me-1"></i>Publish now</button>
+                </form>
+            }
+        </div>
+    </section>
+}
+
+<!-- ===== Steps ===== -->
+<ol class="pl-steps">
+    @foreach (var step in Model.Steps)
+    {
+        var r = J(step.ResultJson);
+        var input = J(step.InputJson);
+        <li class="pl-step st-@step.Status.ToLower() @(step.RequiresApproval ? "proposal" : "")">
+            <div class="pl-num" aria-hidden="true">@if (step.Status is "Done" or "Approved") { <i class="bi bi-check-lg"></i> } else { @step.Order }</div>
+            <div class="pl-card">
+                <div class="pl-card-head">
+                    <h2>@step.Title</h2>
+                    <partial name="_Status" model="step.Status" />
+                    @if (step.RequiresApproval && PlannerService.IsOpen(step)) { <span class="pl-tag">Needs your approval</span> }
+                </div>
+                <p class="pl-expl">@step.Explanation</p>
+
+                @switch (step.Tool)
+                {
+                    case PlannerService.ToolGoal:
+                        <dl class="pl-facts">
+                            <div><dt>Category</dt><dd>@(Str(r, "category") ?? "—")</dd></div>
+                            <div><dt>Place</dt><dd>@(Str(r, "place") ?? "—")</dd></div>
+                            <div><dt>Dates</dt><dd>@Day(Str(r, "start_date")) @(Str(r, "end_date") is string ed && ed != Str(r, "start_date") ? "– " + Day(ed) : "")</dd></div>
+                            <div><dt>People</dt><dd>@(Str(r, "people") is string ppl && ppl.Length > 0 ? $"{ppl} {Str(r, "audience")}" : "—")</dd></div>
+                            @if (Str(r, "language") is string lang && lang.Length > 0) { <div><dt>Language</dt><dd>@lang</dd></div> }
+                        </dl>
+                        if (r?["assumptions"] is JsonArray asm && asm.Count > 0)
+                        {
+                            <ul class="pl-assume">@foreach (var a in asm) { <li><i class="bi bi-exclamation-triangle"></i>@a</li> }</ul>
+                        }
+                        break;
+
+                    case PlannerService.ToolNgos:
+                        if (r?["ngos"] is JsonArray ngos)
+                        {
+                            <ul class="pl-list">
+                                @foreach (var n in ngos.Take(3))
+                                {
+                                    <li class="@(n == ngos[0] ? "top" : "")"><b>@Str(n, "name")</b> <span class="text-secondary">· @Str(n, "focus_area"), @Str(n, "city") · score @Str(n, "score")</span><small>@Str(n, "reason")</small></li>
+                                }
+                            </ul>
+                        }
+                        break;
+
+                    case PlannerService.ToolCalendar:
+                        if (r?["clashes"] is JsonArray cl && cl.Count > 0)
+                        {
+                            <ul class="pl-list">
+                                @foreach (var c in cl)
+                                {
+                                    <li><b>@Str(c, "title")</b> <span class="text-secondary">· @Day(Str(c, "start_date")) · @Str(c, "venue")</span>
+                                        @if (Str(c, "same_ngo") == "true") { <small class="text-danger">Same NGO — they may not have staff for both.</small> }</li>
+                                }
+                            </ul>
+                        }
+                        break;
+
+                    case PlannerService.ToolWeather:
+                        if (r?["days"] is JsonArray days && days.Count > 0)
+                        {
+                            <div class="pl-weather">
+                                @foreach (var wd in days.Take(8))
+                                {
+                                    <div><b>@Day(Str(wd, "date")).Split(' ')[0] @(Str(wd, "date")?.Substring(8))</b><span>@Str(wd, "min_c")–@Str(wd, "max_c") °C</span><small><i class="bi bi-droplet"></i> @Str(wd, "rain_mm") mm</small></div>
+                                }
+                            </div>
+                            <p class="small text-secondary mb-0 mt-2">Basis: @Str(r, "basis")</p>
+                        }
+                        break;
+
+                    case PlannerService.ToolVolunteers:
+                        if (r?["volunteers"] is JsonArray vols && vols.Count > 0)
+                        {
+                            <ul class="pl-list">
+                                @foreach (var v in vols)
+                                {
+                                    <li><b>@Str(v, "name")</b> <span class="text-secondary">@(Str(v, "city") is string vc && vc.Length > 0 ? "· " + vc : "")</span><small>@Str(v, "reason")</small></li>
+                                }
+                            </ul>
+                            <p class="small text-secondary mb-0">@Str(r, "note")</p>
+                        }
+                        break;
+
+                    case PlannerService.ToolBudget:
+                        if (r?["lines"] is JsonArray lines && lines.Count > 0)
+                        {
+                            <table class="pl-budget">
+                                @foreach (var l in lines) { <tr><td>@Str(l, "item")</td><td>@Money(l?["amount"])</td></tr> }
+                                <tr class="total"><td>Total</td><td>@Money(r["total"])</td></tr>
+                            </table>
+                            <p class="small text-secondary mb-0 mt-2">Confidence: <b>@Str(r, "confidence")</b> · based on @string.Join(", ", (r["based_on"] as JsonArray ?? new JsonArray()).Select(x => x?.ToString()))</p>
+                        }
+                        break;
+
+                    case PlannerService.ToolDraft:
+                    {
+                        var d = PlannerService.Read<DraftProposal>(step)!;
+                        <div class="pl-preview">
+                            <div class="pl-preview-top">
+                                <span class="tag">@d.Category</span>
+                                <h3>@d.Title</h3>
+                                <p>@d.Summary</p>
+                                <div class="pl-preview-meta">
+                                    <span><i class="bi bi-calendar-event"></i>@d.StartDate.ToString("ddd d MMM yyyy")@(d.EndDate.HasValue ? " – " + d.EndDate.Value.ToString("d MMM") : "")</span>
+                                    <span><i class="bi bi-geo-alt"></i>@d.Venue</span>
+                                    <span><i class="bi bi-building"></i>@(d.NgoId != null && Model.NgoNames.TryGetValue(d.NgoId.Value, out var nn) ? nn : "No NGO chosen")</span>
+                                    @if (d.Beneficiaries.HasValue) { <span><i class="bi bi-people"></i>@d.Beneficiaries.Value.ToString("#,##0") people</span> }
+                                </div>
+                            </div>
+                            <div class="pl-preview-body prose">@ContentFormatter.ToHtml(d.Details)</div>
+                            @if (d.BudgetLines.Count > 0)
+                            {
+                                <table class="pl-budget">
+                                    @foreach (var l in d.BudgetLines) { <tr><td>@l.Item</td><td>@ContentFormatter.Rupees(l.Amount)</td></tr> }
+                                    <tr class="total"><td>Budget</td><td>@ContentFormatter.Rupees(d.BudgetLines.Sum(l => l.Amount))</td></tr>
+                                </table>
+                            }
+                        </div>
+                        if (PlannerService.IsOpen(step))
+                        {
+                            <div class="pl-actions">
+                                <form asp-action="Approve" asp-route-id="@step.Id" method="post">
+                                    <button class="btn btn-ga"><i class="bi bi-check2-circle me-1"></i>Approve — create hidden draft</button>
+                                </form>
+                                <a class="btn btn-outline-ga" asp-action="EditDraft" asp-route-id="@step.Id"><i class="bi bi-pencil me-1"></i>Edit first</a>
+                                <form asp-action="Reject" asp-route-id="@step.Id" method="post" class="pl-reject">
+                                    <input name="reason" class="form-control form-control-sm" placeholder="Reason (optional)" maxlength="300" aria-label="Reason for rejecting" />
+                                    <button class="btn btn-sm btn-outline-danger">Reject</button>
+                                </form>
+                            </div>
+                        }
+                        break;
+                    }
+
+                    case PlannerService.ToolInvites:
+                    {
+                        var inv = PlannerService.Read<InviteProposal>(step)!;
+                        if (PlannerService.IsOpen(step))
+                        {
+                            bool canSend = p != null && p.IsPublished;
+                            <form asp-action="Approve" asp-route-id="@step.Id" method="post" class="pl-invite">
+                                <fieldset>
+                                    <legend class="visually-hidden">Volunteers to invite</legend>
+                                    @foreach (var key in inv.VolunteerIds)
+                                    {
+                                        var info = Model.Volunteers.TryGetValue(key, out var x) ? x : (key, null, "");
+                                        <label class="pl-vol">
+                                            <input type="checkbox" name="volunteerIds" value="@key" checked class="form-check-input" />
+                                            <span><b>@info.Name</b>@(info.City != null ? " · " + info.City : "")<small>@info.Why</small></span>
+                                        </label>
+                                    }
+                                </fieldset>
+                                <label class="form-label mt-2" for="msg-@step.Id">Message</label>
+                                <textarea id="msg-@step.Id" name="message" class="form-control" rows="3" maxlength="1500">@inv.Message</textarea>
+                                <div class="pl-actions">
+                                    <button class="btn btn-ga" @(canSend ? "" : "disabled")><i class="bi bi-send me-1"></i>Approve — send invitations</button>
+                                    @if (!canSend)
+                                    {
+                                        <span class="small text-secondary"><i class="bi bi-info-circle"></i> @(p == null ? "Approve the draft programme first, then publish it." : "Publish the programme first, so the link in the e-mail works.")</span>
+                                    }
+                                </div>
+                            </form>
+                            <form asp-action="Reject" asp-route-id="@step.Id" method="post" class="pl-reject mt-2">
+                                <input name="reason" class="form-control form-control-sm" placeholder="Reason (optional)" maxlength="300" aria-label="Reason for rejecting" />
+                                <button class="btn btn-sm btn-outline-danger">Reject invitations</button>
+                            </form>
+                        }
+                        else if (step.Status == "Approved" && r != null)
+                        {
+                            var sent = r["sent"] as JsonArray; var saved = r["saved_only"] as JsonArray;
+                            <ul class="pl-list">
+                                @if (sent?.Count > 0) { <li><b>E-mailed:</b> @string.Join(", ", sent.Select(x => x?.ToString()))</li> }
+                                @if (saved?.Count > 0) { <li><b>Saved (e-mail not set up):</b> @string.Join(", ", saved.Select(x => x?.ToString()))</li> }
+                            </ul>
+                            @if (saved?.Count > 0 && Str(r, "mailto") is string mt) { <a class="btn btn-sm btn-outline-ga" href="@mt"><i class="bi bi-envelope me-1"></i>Open in e-mail app</a> }
+                        }
+                        break;
+                    }
+                }
+
+                @if (step.DecidedBy != null || step.Note != null)
+                {
+                    <p class="pl-decided"><i class="bi bi-person-check"></i>
+                        @(step.DecidedBy != null ? $"{step.Status} by {step.DecidedBy}, {step.DecidedAt:dd MMM HH:mm}." : "") @step.Note</p>
+                }
+                @if (!step.RequiresApproval)
+                {
+                    <details class="pl-raw"><summary>Data used <span>· @step.Sources</span></summary><pre>@Pretty(step.ResultJson)</pre></details>
+                }
+            </div>
+        </li>
+    }
+</ol>
+
+@if (Model.Steps.Count == 0)
+{
+    <div class="panel text-secondary">No steps were recorded.</div>
+}

@@ -1,0 +1,19 @@
+@model string
+@* Coloured label for a plan or step status *@
+@{
+    var (css, text, icon) = Model switch
+    {
+        "Done" => ("ok", "Done", "check2"),
+        "Completed" => ("ok", "Completed", "check2-all"),
+        "Approved" => ("ok", "Approved", "check2-circle"),
+        "Pending" => ("wait", "Waiting for you", "hourglass-split"),
+        "AwaitingApproval" => ("wait", "Waiting for approval", "hourglass-split"),
+        "NeedsReview" => ("warn", "Please check", "exclamation-triangle"),
+        "Rejected" => ("off", "Rejected", "x-circle"),
+        "Cancelled" => ("off", "Cancelled", "x-circle"),
+        "Failed" => ("bad", "Failed", "exclamation-octagon"),
+        "Planning" => ("wait", "Planning", "arrow-repeat"),
+        _ => ("off", Model, "dot")
+    };
+}
+<span class="pl-status pl-@css"><i class="bi bi-@icon"></i>@text</span>

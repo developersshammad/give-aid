@@ -1,0 +1,8 @@
+{
+  "name": "giveaid-client",
+  "private": true,
+  "description": "Builds the compressed CSS/JS for wwwroot. Run: npm install, then npm run build",
+  "type": "module",
+  "scripts": { "build": "node build.mjs" },
+  "devDependencies": { "esbuild": "0.24.0", "three": "0.169.0" }
+}

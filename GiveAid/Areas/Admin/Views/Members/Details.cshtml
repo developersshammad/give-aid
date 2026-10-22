@@ -1,0 +1,77 @@
+@model MemberDetailsViewModel
+@{
+    var m = Model.Member;
+    ViewData["Title"] = m.FullName;
+}
+@section Actions {
+    <form asp-action="ToggleActive" asp-route-id="@m.Id" method="post" data-confirm="@(m.IsActive ? "Disable" : "Enable") this account?">
+        <button class="btn @(m.IsActive ? "btn-outline-danger" : "btn-ga")">@(m.IsActive ? "Disable account" : "Enable account")</button>
+    </form>
+}
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="panel mb-3">
+            <h2 class="panel-title">Personal</h2>
+            <dl class="mb-0">
+                <dt>E-mail</dt><dd>@m.Email</dd>
+                <dt>Mobile</dt><dd>@m.Phone</dd>
+                <dt>Gender</dt><dd>@m.Gender</dd>
+                <dt>Date of birth</dt><dd>@m.DateOfBirth?.ToString("dd MMM yyyy")</dd>
+                <dt>Address</dt><dd>@m.Address @m.City, @m.Country</dd>
+                <dt>Status</dt><dd class="mb-0">@(m.IsActive ? "Active" : "Disabled"), registered @m.RegisteredAt.ToString("dd MMM yyyy")</dd>
+            </dl>
+        </div>
+        <div class="panel">
+            <h2 class="panel-title">Professional</h2>
+            <dl class="mb-0">
+                <dt>Occupation</dt><dd>@m.Occupation</dd>
+                <dt>Organisation</dt><dd>@m.Organization</dd>
+                <dt>Qualification</dt><dd>@m.Qualification</dd>
+                <dt>Interested in</dt><dd class="mb-0">@m.AreasOfInterest</dd>
+            </dl>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <h2 class="h5">Donations (@ContentFormatter.Rupees(Model.Donations.Sum(d => d.Amount)))</h2>
+        <div class="table-wrap mb-4">
+            <table class="table table-ga">
+                <thead><tr><th>Date</th><th>Reference</th><th>Cause</th><th class="text-end">Amount</th></tr></thead>
+                <tbody>
+                    @if (Model.Donations.Count == 0) { <tr><td colspan="4" class="text-secondary">No donations.</td></tr> }
+                    @foreach (var d in Model.Donations)
+                    {
+                        <tr><td>@d.DonatedAt.ToString("dd MMM yyyy")</td><td><code>@d.TransactionRef</code></td><td>@d.Cause?.Name</td><td class="text-end">@ContentFormatter.Rupees(d.Amount)</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <h2 class="h5">Programme interests</h2>
+        <div class="table-wrap mb-4">
+            <table class="table table-ga">
+                <thead><tr><th>Programme</th><th>As</th><th>Sent</th></tr></thead>
+                <tbody>
+                    @if (Model.Interests.Count == 0) { <tr><td colspan="3" class="text-secondary">None.</td></tr> }
+                    @foreach (var i in Model.Interests)
+                    {
+                        <tr><td>@i.Programme?.Title</td><td>@i.ParticipationType</td><td>@i.SubmittedAt.ToString("dd MMM yyyy")</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <h2 class="h5">Friends invited</h2>
+        <div class="table-wrap">
+            <table class="table table-ga">
+                <thead><tr><th>Friend</th><th>E-mail</th><th>Date</th><th>Delivery</th></tr></thead>
+                <tbody>
+                    @if (Model.Invitations.Count == 0) { <tr><td colspan="4" class="text-secondary">None.</td></tr> }
+                    @foreach (var i in Model.Invitations)
+                    {
+                        <tr><td>@i.FriendName</td><td>@i.FriendEmail</td><td>@i.SentAt.ToString("dd MMM yyyy")</td><td>@(i.EmailSent ? "E-mailed" : "Saved only")</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<a asp-action="Index" class="btn btn-outline-ga mt-4">Back to members</a>

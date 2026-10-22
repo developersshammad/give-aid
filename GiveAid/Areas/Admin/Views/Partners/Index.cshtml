@@ -1,0 +1,30 @@
+@model List<Partner>
+@{ ViewData["Title"] = "Partners"; }
+@section Actions { <a class="btn btn-ga" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>Add partner</a> }
+
+<p class="text-secondary">Companies shown on the "Our Partners" page and on the home page.</p>
+<div class="table-wrap">
+    <table class="table table-ga">
+        <thead><tr><th>#</th><th>Logo</th><th>Company</th><th>Type</th><th>Website</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td>@p.DisplayOrder</td>
+                    <td><img src="@p.LogoPath" alt="" class="thumb thumb-logo" /></td>
+                    <td><b>@p.Name</b><div class="small text-secondary">@ContentFormatter.Excerpt(p.Description, 60)</div></td>
+                    <td>@p.PartnerType</td>
+                    <td class="small">@p.Website</td>
+                    <td>
+                        <div class="actions">
+                            <a class="btn btn-sm btn-outline-ga btn-icon" asp-action="Edit" asp-route-id="@p.Id" title="Edit"><i class="bi bi-pencil"></i><span class="visually-hidden">Edit @p.Name</span></a>
+                            <form asp-action="Delete" asp-route-id="@p.Id" method="post" data-confirm="Delete partner '@p.Name'?">
+                                <button class="btn btn-sm btn-outline-danger btn-icon" title="Delete"><i class="bi bi-trash"></i><span class="visually-hidden">Delete @p.Name</span></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

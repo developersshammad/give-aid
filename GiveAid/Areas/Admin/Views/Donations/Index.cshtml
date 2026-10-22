@@ -1,0 +1,56 @@
+@model DonationReportViewModel
+@{ ViewData["Title"] = "Donations"; }
+
+<form method="get" class="panel mb-3 py-3">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label" for="causeId">Cause</label>
+            <select class="form-select" id="causeId" name="causeId">
+                <option value="">All causes</option>
+                @foreach (var c in Model.Causes)
+                {
+                    <option value="@c.Id" selected="@(Model.CauseId == c.Id)">@c.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="from">From</label>
+            <input type="date" class="form-control" id="from" name="from" value="@Model.From?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="to">To</label>
+            <input type="date" class="form-control" id="to" name="to" value="@Model.To?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button class="btn btn-ga flex-fill" type="submit">Filter</button>
+            <a class="btn btn-outline-ga" asp-action="Index" title="Reset"><i class="bi bi-x-lg"></i><span class="visually-hidden">Reset</span></a>
+        </div>
+    </div>
+</form>
+
+<div class="stat-row mb-3" style="grid-template-columns:repeat(3,1fr)">
+    <div><b>@ContentFormatter.Rupees(Model.Total)</b><span>total in this list</span></div>
+    <div><b>@Model.Donations.Count</b><span>transactions</span></div>
+    <div><b>@ContentFormatter.Rupees(Model.Donations.Count == 0 ? 0 : Model.Total / Model.Donations.Count)</b><span>average gift</span></div>
+</div>
+
+<div class="table-wrap">
+    <table class="table table-ga">
+        <thead><tr><th>Date</th><th>Reference</th><th>Donor</th><th>Cause</th><th>Card</th><th>Status</th><th class="text-end">Amount</th></tr></thead>
+        <tbody>
+            @if (Model.Donations.Count == 0) { <tr><td colspan="7" class="text-secondary">No donations match this filter.</td></tr> }
+            @foreach (var d in Model.Donations)
+            {
+                <tr>
+                    <td class="small text-nowrap">@d.DonatedAt.ToString("dd MMM yyyy HH:mm")</td>
+                    <td><code>@d.TransactionRef</code></td>
+                    <td>@d.DonorName@(d.IsAnonymous ? " (anonymous)" : "")<div class="small text-secondary">@d.DonorEmail</div></td>
+                    <td>@d.Cause?.Name</td>
+                    <td class="small">@d.CardBrand @d.CardType.ToLower()<br />**** @d.CardLast4</td>
+                    <td><span class="status status-answered">@d.Status</span></td>
+                    <td class="text-end fw-semibold">@ContentFormatter.Rupees(d.Amount)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

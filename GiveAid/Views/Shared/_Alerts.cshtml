@@ -1,0 +1,19 @@
+@* Shows one-time success / error messages stored in TempData *@
+@if (TempData["Success"] is string ok)
+{
+    <div class="alert alert-ga alert-dismissible fade show" role="status">
+        <i class="bi bi-check-circle-fill me-2 text-success"></i>@ok
+        @if (TempData["MailTo"] is string mailto)
+        {
+            <a class="ms-2 fw-semibold" href="@mailto">Open it in your e-mail app</a>
+        }
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Error"] is string err)
+{
+    <div class="alert alert-ga-error alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2 text-danger"></i>@err
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}

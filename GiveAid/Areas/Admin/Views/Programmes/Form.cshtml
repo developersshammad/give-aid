@@ -1,0 +1,73 @@
+@model Programme
+@{ ViewData["Title"] = Model.Id == 0 ? "Add programme" : "Edit programme"; }
+
+<form asp-action="@(Model.Id == 0 ? "Create" : "Edit")" asp-route-id="@(Model.Id == 0 ? null : Model.Id)" method="post" enctype="multipart/form-data" class="panel" style="max-width:60rem" novalidate>
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="row g-3">
+        <div class="col-md-8">
+            <label asp-for="Title" class="form-label"></label>
+            <input asp-for="Title" class="form-control" />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Category" class="form-label"></label>
+            <select asp-for="Category" asp-items="ViewBag.Categories" class="form-select"></select>
+            <span asp-validation-for="Category" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="NgoId" class="form-label"></label>
+            <select asp-for="NgoId" asp-items="ViewBag.Ngos" class="form-select"><option value="">(none)</option></select>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Venue" class="form-label"></label>
+            <input asp-for="Venue" class="form-control" />
+            <span asp-validation-for="Venue" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="StartDate" class="form-label"></label>
+            <input asp-for="StartDate" class="form-control" />
+            <span asp-validation-for="StartDate" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="EndDate" class="form-label">End date <span class="text-secondary fw-normal">(optional)</span></label>
+            <input asp-for="EndDate" class="form-control" />
+            <span asp-validation-for="EndDate" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" for="image">Picture @(Model.Id == 0 ? "(optional)" : "(leave empty to keep current)")</label>
+            <input type="file" name="image" id="image" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" />
+            @Html.ValidationMessage("image", new { @class = "text-danger" })
+        </div>
+        @if (!string.IsNullOrEmpty(Model.ImagePath))
+        {
+            <div class="col-12"><img src="@Model.ImagePath" alt="Current picture" class="thumb" style="width:12rem;height:7.5rem" /></div>
+        }
+        <div class="col-md-4">
+            <label asp-for="Beneficiaries" class="form-label">People served <span class="text-secondary fw-normal">(optional)</span></label>
+            <input asp-for="Beneficiaries" class="form-control" type="number" min="0" />
+            <span asp-validation-for="Beneficiaries" class="text-danger"></span>
+        </div>
+        <div class="col-md-8 d-flex align-items-end">
+            <div class="form-check mb-2">
+                <input asp-for="IsPublished" class="form-check-input" />
+                <label asp-for="IsPublished" class="form-check-label">Published on the website <span class="text-secondary">(untick to keep it as a hidden draft)</span></label>
+            </div>
+        </div>
+        <div class="col-12">
+            <label asp-for="Summary" class="form-label">Short summary (shown on cards)</label>
+            <input asp-for="Summary" class="form-control" maxlength="300" />
+            <span asp-validation-for="Summary" class="text-danger"></span>
+        </div>
+        <div class="col-12">
+            <label asp-for="Details" class="form-label">Full details</label>
+            <textarea asp-for="Details" class="form-control editor" rows="9"></textarea>
+            <div class="form-text">Blank line = new paragraph, <code>## </code> = heading, <code>- </code> = bullet point.</div>
+            <span asp-validation-for="Details" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-ga">Save</button>
+        <a asp-action="Index" class="btn btn-outline-ga">Cancel</a>
+    </div>
+</form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

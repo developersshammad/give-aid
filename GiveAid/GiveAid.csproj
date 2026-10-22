@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    Give-AID : NGO Website (Aptech eProject)
+    Technology : ASP.NET Core MVC 8 (C#) + SQL Server (Entity Framework Core 8)
+    IDE        : Visual Studio 2022 (17.8 or newer)
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>GiveAid</RootNamespace>
+    <!-- ClientSrc holds the readable 3D scripts + the optional asset build; its node_modules is never part of the app -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);ClientSrc/node_modules/**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Entity Framework Core provider for Microsoft SQL Server -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.11" />
+    <!-- Optional: lets you use Add-Migration / Update-Database from Package Manager Console -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.11">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

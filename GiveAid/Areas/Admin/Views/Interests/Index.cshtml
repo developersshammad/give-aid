@@ -1,0 +1,39 @@
+@model List<ProgrammeInterest>
+@{
+    ViewData["Title"] = "Programme interests";
+    var programmes = ViewBag.Programmes as List<Programme> ?? new();
+    int? selected = ViewBag.ProgrammeId;
+}
+
+<form method="get" class="d-flex gap-2 mb-3" style="max-width:36rem">
+    <label class="visually-hidden" for="programmeId">Programme</label>
+    <select class="form-select" id="programmeId" name="programmeId" onchange="this.form.submit()">
+        <option value="">All programmes</option>
+        @foreach (var p in programmes)
+        {
+            <option value="@p.Id" selected="@(selected == p.Id)">@p.Title (@p.StartDate.ToString("dd MMM"))</option>
+        }
+    </select>
+    <noscript><button class="btn btn-ga">Show</button></noscript>
+</form>
+
+<p class="text-secondary">@Model.Count people want to take part.</p>
+<div class="table-wrap">
+    <table class="table table-ga">
+        <thead><tr><th>Name</th><th>Contact</th><th>Programme</th><th>Joins as</th><th>Message</th><th>Sent</th></tr></thead>
+        <tbody>
+            @if (Model.Count == 0) { <tr><td colspan="6" class="text-secondary">No interest requests yet.</td></tr> }
+            @foreach (var i in Model)
+            {
+                <tr>
+                    <td><b>@i.Name</b>@if (i.MemberId != null) { <a class="ms-1" asp-controller="Members" asp-action="Details" asp-route-id="@i.MemberId" title="Member profile"><i class="bi bi-person-check"></i></a> }</td>
+                    <td class="small"><a href="mailto:@i.Email">@i.Email</a><br />@i.Phone</td>
+                    <td>@i.Programme?.Title</td>
+                    <td><span class="tag">@i.ParticipationType</span></td>
+                    <td class="small">@i.Message</td>
+                    <td class="small text-nowrap">@i.SubmittedAt.ToString("dd MMM yyyy")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

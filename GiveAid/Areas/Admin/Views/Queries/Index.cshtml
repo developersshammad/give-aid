@@ -1,0 +1,27 @@
+@model List<SupportQuery>
+@{
+    ViewData["Title"] = "User queries";
+    string status = ViewBag.Status as string ?? "";
+}
+
+<nav class="filter-pills mb-3" aria-label="Filter queries">
+    <a asp-action="Index" asp-route-status="Open" class="@(status == "Open" ? "active" : "")">Open</a>
+    <a asp-action="Index" asp-route-status="Answered" class="@(status == "Answered" ? "active" : "")">Answered</a>
+    <a asp-action="Index" asp-route-status="" class="@(status == "" ? "active" : "")">All</a>
+</nav>
+
+@if (Model.Count == 0) { <div class="panel text-secondary">No queries here.</div> }
+@foreach (var q in Model)
+{
+    <div class="panel mb-2 py-3">
+        <div class="d-flex justify-content-between gap-3 flex-wrap">
+            <div>
+                <b>@q.Subject</b> <span class="status @(q.Status == "Open" ? "status-open" : "status-answered")">@q.Status</span>
+                <div class="small text-secondary">@q.Name (@q.Email)@(q.MemberId != null ? ", member" : ""), @q.CreatedAt.ToString("dd MMM yyyy HH:mm")</div>
+            </div>
+            <a class="btn btn-sm @(q.Status == "Open" ? "btn-ga" : "btn-outline-ga") align-self-start" asp-action="Reply" asp-route-id="@q.Id">@(q.Status == "Open" ? "Reply" : "Edit reply")</a>
+        </div>
+        <p class="mb-0 mt-2">@q.Message</p>
+        @if (!string.IsNullOrEmpty(q.Reply)) { <div class="reply-bubble"><b>Reply (@q.RepliedAt?.ToString("dd MMM")):</b> @q.Reply</div> }
+    </div>
+}

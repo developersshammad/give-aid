@@ -1,0 +1,102 @@
+@{
+    string controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    string Active(string c) => controller == c ? "active" : "";
+    var menu = new (string Controller, string Icon, string Text)[]
+    {
+        ("Dashboard", "speedometer2", "Dashboard"),
+        ("Planner", "stars", "AI Planner"),
+        ("Donations", "cash-coin", "Donations"),
+        ("Causes", "heart", "Causes"),
+        ("Programmes", "calendar-event", "Programmes"),
+        ("Interests", "person-raised-hand", "Programme interests"),
+        ("Ngos", "building", "Associated NGOs"),
+        ("Partners", "briefcase", "Partners"),
+        ("Gallery", "images", "Gallery"),
+        ("Pages", "file-earmark-text", "Pages & content"),
+        ("Members", "people", "Members"),
+        ("Queries", "chat-left-dots", "Queries")
+    };
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] | Give-AID Admin</title>
+    <link rel="icon" href="~/images/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" />
+    <environment include="Development">
+        <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/admin-nova.css" asp-append-version="true" />
+    </environment>
+    <environment exclude="Development">
+        <link rel="stylesheet" href="~/css/admin.min.css" asp-append-version="true" />
+    </environment>
+    <partial name="_NovaHead" />
+</head>
+<body class="admin">
+    <!-- Nova theme: 3D constellation behind the panel (js/admin3d.js) -->
+    <div class="nova-space" data-nova3d aria-hidden="true"></div>
+    <div class="admin-shell">
+        <div class="admin-side-wrap">
+        <aside class="admin-side offcanvas-lg offcanvas-start" tabindex="-1" id="adminNav" aria-label="Admin menu">
+            <div class="admin-brand">
+                <span class="brand-mark"><i class="bi bi-heart-fill"></i></span>
+                <span>Give-AID<small>Admin panel</small></span>
+                <button type="button" class="btn-close btn-close-white ms-auto d-lg-none" data-bs-dismiss="offcanvas" data-bs-target="#adminNav" aria-label="Close"></button>
+            </div>
+            <nav class="admin-menu">
+                @foreach (var m in menu)
+                {
+                    <a class="@Active(m.Controller)" asp-area="Admin" asp-controller="@m.Controller" asp-action="Index"><i class="bi bi-@m.Icon"></i>@m.Text</a>
+                }
+            </nav>
+            <div class="admin-foot">
+                <a href="/" target="_blank"><i class="bi bi-box-arrow-up-right"></i>View website</a>
+                <form asp-area="Admin" asp-controller="Auth" asp-action="Logout" method="post">
+                    <button type="submit"><i class="bi bi-box-arrow-left"></i>Log out</button>
+                </form>
+            </div>
+        </aside>
+        </div>
+
+        <div class="admin-main">
+            <header class="admin-top">
+                <button class="btn btn-outline-ga btn-sm d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminNav" aria-controls="adminNav"><i class="bi bi-list"></i> Menu</button>
+                <h1 class="h3 m-0">@ViewData["Title"]</h1>
+                <div class="ms-auto d-flex align-items-center gap-3">
+                    @await RenderSectionAsync("Actions", required: false)
+                    <div class="hud">
+                        <span class="hud-clock d-none d-xl-inline" data-hud-clock><i class="dot" aria-hidden="true"></i><span>@DateTime.Now.ToString("ddd HH:mm")</span></span>
+                        <button type="button" class="hud-btn" data-cmdk-open title="Search pages and actions (Ctrl + K)"><i class="bi bi-search"></i><span class="lbl">Search</span><kbd>Ctrl K</kbd></button>
+                        <button type="button" class="hud-btn" data-theme-toggle aria-pressed="true"><i class="bi bi-sun"></i><span class="lbl">Day</span></button>
+                    </div>
+                    <span class="text-secondary d-none d-md-inline"><i class="bi bi-person-circle me-1"></i>@User.GetDisplayName()</span>
+                </div>
+            </header>
+            <div class="admin-content">
+                <partial name="_Alerts" />
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+    <script src="~/lib/jquery/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <environment include="Development">
+        <script src="~/js/site.js" asp-append-version="true"></script>
+    </environment>
+    <environment exclude="Development">
+        <script src="~/js/site.min.js" asp-append-version="true"></script>
+    </environment>
+    <environment include="Development">
+        <script src="~/js/admin-nova.js" asp-append-version="true"></script>
+    </environment>
+    <environment exclude="Development">
+        <script src="~/js/admin-nova.min.js" asp-append-version="true"></script>
+    </environment>
+    <script type="module" src="~/js/dist/admin3d.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

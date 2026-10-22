@@ -1,0 +1,39 @@
+@model LoginViewModel
+@{ ViewData["Title"] = "Log in"; }
+<div class="auth-wrap">
+    <div class="auth-side d-none d-lg-block">
+        <h1 class="h2 mb-3">Welcome back</h1>
+        <p>Your account keeps everything in one place.</p>
+        <ul>
+            <li><i class="bi bi-receipt"></i>Every donation receipt you have made</li>
+            <li><i class="bi bi-chat-dots"></i>Replies to your questions</li>
+            <li><i class="bi bi-calendar-check"></i>Programmes you have joined</li>
+            <li><i class="bi bi-envelope-heart"></i>Friends you have invited</li>
+        </ul>
+    </div>
+    <div class="section px-3">
+        <form asp-action="Login" method="post" class="panel mx-auto" style="max-width:28rem" novalidate>
+            <h1 class="h3 mb-1">Log in</h1>
+            <p class="text-secondary">New here? <a asp-action="Register">Create an account</a></p>
+            <div asp-validation-summary="ModelOnly" class="alert alert-ga-error py-2" role="alert"></div>
+            <input type="hidden" asp-for="ReturnUrl" />
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label">E-mail</label>
+                <input asp-for="Email" class="form-control" autocomplete="email" autofocus />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label"></label>
+                <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="RememberMe" class="form-check-input" />
+                <label asp-for="RememberMe" class="form-check-label"></label>
+            </div>
+            <button type="submit" class="btn btn-ga w-100">Log in</button>
+            <p class="small text-secondary mt-3 mb-0">Demo member: ayesha@example.com / Member@123</p>
+        </form>
+    </div>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

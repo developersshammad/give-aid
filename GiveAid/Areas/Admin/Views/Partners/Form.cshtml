@@ -1,0 +1,45 @@
+@model Partner
+@{ ViewData["Title"] = Model.Id == 0 ? "Add partner" : "Edit partner"; }
+
+<form asp-action="@(Model.Id == 0 ? "Create" : "Edit")" asp-route-id="@(Model.Id == 0 ? null : Model.Id)" method="post" enctype="multipart/form-data" class="panel" style="max-width:48rem" novalidate>
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="row g-3">
+        <div class="col-md-7">
+            <label asp-for="Name" class="form-label">Company name</label>
+            <input asp-for="Name" class="form-control" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+        <div class="col-md-5">
+            <label asp-for="PartnerType" class="form-label"></label>
+            <select asp-for="PartnerType" class="form-select">
+                <option>Corporate</option><option>Technology</option><option>Media</option><option>Foundation</option><option>Government</option>
+            </select>
+        </div>
+        <div class="col-12">
+            <label asp-for="Description" class="form-label"></label>
+            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+        <div class="col-md-8">
+            <label asp-for="Website" class="form-label"></label>
+            <input asp-for="Website" class="form-control" type="url" placeholder="https://" />
+            <span asp-validation-for="Website" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="DisplayOrder" class="form-label"></label>
+            <input asp-for="DisplayOrder" class="form-control" type="number" />
+        </div>
+        <div class="col-12">
+            <label class="form-label" for="logo">Logo @(Model.Id == 0 ? "" : "(leave empty to keep the current logo)")</label>
+            @if (!string.IsNullOrEmpty(Model.LogoPath)) { <div class="mb-2"><img src="@Model.LogoPath" alt="Current logo" class="thumb thumb-logo" style="width:10rem;height:4rem" /></div> }
+            <input type="file" name="logo" id="logo" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" />
+            <div class="form-text">JPG, PNG, GIF or WEBP, up to 5 MB.</div>
+            @Html.ValidationMessage("logo", new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-ga">Save</button>
+        <a asp-action="Index" class="btn btn-outline-ga">Cancel</a>
+    </div>
+</form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

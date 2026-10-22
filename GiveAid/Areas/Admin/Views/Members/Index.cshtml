@@ -1,0 +1,33 @@
+@model List<Member>
+@{
+    ViewData["Title"] = "Registered members";
+    var totals = ViewBag.Totals as Dictionary<int, decimal> ?? new();
+}
+
+<form method="get" class="d-flex gap-2 mb-3" style="max-width:32rem" role="search">
+    <label class="visually-hidden" for="search">Search members</label>
+    <input class="form-control" id="search" name="search" value="@ViewBag.Search" placeholder="Name, e-mail, city or occupation" />
+    <button class="btn btn-ga" type="submit">Search</button>
+    @if (!string.IsNullOrEmpty(ViewBag.Search as string)) { <a class="btn btn-outline-ga" asp-action="Index">Clear</a> }
+</form>
+
+<p class="text-secondary">@Model.Count members</p>
+<div class="table-wrap">
+    <table class="table table-ga">
+        <thead><tr><th>Name</th><th>E-mail / phone</th><th>City</th><th>Occupation</th><th>Registered</th><th class="text-end">Donated</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var m in Model)
+            {
+                <tr class="@(m.IsActive ? "" : "opacity-50")">
+                    <td><b>@m.FullName</b>@if (!m.IsActive) { <span class="status status-open ms-1">Disabled</span> }</td>
+                    <td class="small">@m.Email<br />@m.Phone</td>
+                    <td>@m.City</td>
+                    <td class="small">@m.Occupation<br /><span class="text-secondary">@m.Organization</span></td>
+                    <td class="small">@m.RegisteredAt.ToString("dd MMM yyyy")</td>
+                    <td class="text-end">@ContentFormatter.Rupees(totals.TryGetValue(m.Id, out var t) ? t : 0)</td>
+                    <td class="text-end"><a class="btn btn-sm btn-outline-ga" asp-action="Details" asp-route-id="@m.Id">View</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

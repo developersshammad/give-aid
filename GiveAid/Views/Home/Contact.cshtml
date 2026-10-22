@@ -1,0 +1,45 @@
+@model ContactViewModel
+@{ ViewData["Title"] = "Contact us"; }
+<partial name="_PageHead" model="@((Model.Page.Title, Model.Page.Subtitle))" />
+
+<section class="section">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-5">
+                <div class="prose">@ContentFormatter.ToHtml(Model.Page.Body)</div>
+            </div>
+            <div class="col-lg-7">
+                <partial name="_Alerts" />
+                <form class="panel" asp-action="Contact" method="post" novalidate>
+                    <h2 class="panel-title">Send us a message</h2>
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Form.Name" class="form-label">Your name</label>
+                            <input asp-for="Form.Name" class="form-control" autocomplete="name" />
+                            <span asp-validation-for="Form.Name" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Form.Email" class="form-label"></label>
+                            <input asp-for="Form.Email" class="form-control" autocomplete="email" />
+                            <span asp-validation-for="Form.Email" class="text-danger"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Form.Subject" class="form-label"></label>
+                            <input asp-for="Form.Subject" class="form-control" />
+                            <span asp-validation-for="Form.Subject" class="text-danger"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Form.Message" class="form-label"></label>
+                            <textarea asp-for="Form.Message" class="form-control" rows="6"></textarea>
+                            <span asp-validation-for="Form.Message" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-ga mt-3">Send message</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

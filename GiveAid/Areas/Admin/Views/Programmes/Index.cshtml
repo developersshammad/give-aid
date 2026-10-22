@@ -1,0 +1,34 @@
+@model List<Programme>
+@{
+    ViewData["Title"] = "Programmes";
+    var counts = ViewBag.InterestCounts as Dictionary<int, int> ?? new();
+}
+@section Actions { <a class="btn btn-ga" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>Add programme</a> }
+
+<div class="table-wrap">
+    <table class="table table-ga">
+        <thead><tr><th></th><th>Programme</th><th>Category</th><th>Date</th><th>Status</th><th>Interests</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td><img src="@(p.ImagePath ?? "/images/programmes/education.webp")" alt="" class="thumb" /></td>
+                    <td><b>@p.Title</b>@if (!p.IsPublished) { <span class="status status-open ms-1">Draft</span> }<div class="small text-secondary">@p.Venue @(p.Ngo != null ? "- " + p.Ngo.Name : "")</div></td>
+                    <td>@p.Category</td>
+                    <td class="small text-nowrap">@p.StartDate.ToString("dd MMM yyyy")@(p.EndDate.HasValue ? " to " + p.EndDate.Value.ToString("dd MMM") : "")</td>
+                    <td><span class="status @(p.IsUpcoming ? "status-open" : "status-answered")">@(p.IsUpcoming ? "Upcoming" : "Completed")</span></td>
+                    <td><a asp-controller="Interests" asp-action="Index" asp-route-programmeId="@p.Id">@(counts.TryGetValue(p.Id, out var n) ? n : 0)</a></td>
+                    <td>
+                        <div class="actions">
+                            <a class="btn btn-sm btn-outline-ga btn-icon" asp-area="" asp-controller="Programmes" asp-action="Details" asp-route-id="@p.Id" target="_blank" title="View on website"><i class="bi bi-eye"></i><span class="visually-hidden">View</span></a>
+                            <a class="btn btn-sm btn-outline-ga btn-icon" asp-action="Edit" asp-route-id="@p.Id" title="Edit"><i class="bi bi-pencil"></i><span class="visually-hidden">Edit @p.Title</span></a>
+                            <form asp-action="Delete" asp-route-id="@p.Id" method="post" data-confirm="Delete '@p.Title'? Interest requests for it will also be deleted.">
+                                <button class="btn btn-sm btn-outline-danger btn-icon" title="Delete"><i class="bi bi-trash"></i><span class="visually-hidden">Delete @p.Title</span></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

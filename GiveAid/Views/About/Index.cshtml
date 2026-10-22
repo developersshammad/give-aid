@@ -1,0 +1,30 @@
+@model PageViewModel
+@{ ViewData["Title"] = Model.Page.Title; }
+<partial name="_PageHead" model="@((Model.Page.Title, Model.Page.Subtitle))" />
+
+<section class="section">
+    <div class="container">
+        <div class="row g-5">
+            <aside class="col-lg-3">
+                <nav class="side-nav" aria-label="About us pages">
+                    @foreach (var p in Model.Siblings)
+                    {
+                        <a href="/About/@p.Slug" class="@(p.Id == Model.Page.Id ? "active" : "")" aria-current="@(p.Id == Model.Page.Id ? "page" : null)">@p.Title</a>
+                    }
+                    <a asp-controller="Ngos" asp-action="Index">Associated NGOs</a>
+                </nav>
+            </aside>
+            <article class="col-lg-9">
+                <div class="prose">@ContentFormatter.ToHtml(Model.Page.Body)</div>
+                <div class="panel mt-5 d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div>
+                        <h2 class="h4 mb-1">Ready to help?</h2>
+                        <p class="text-secondary mb-0">Pick a cause and give any amount.</p>
+                    </div>
+                    <a class="btn btn-donate" asp-controller="Donate" asp-action="Index">Donate now</a>
+                </div>
+                <p class="small text-secondary mt-3">Last updated @Model.Page.UpdatedAt.ToString("dd MMMM yyyy")</p>
+            </article>
+        </div>
+    </div>
+</section>

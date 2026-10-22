@@ -1,0 +1,36 @@
+@model Donation
+@{ ViewData["Title"] = "Thank you"; }
+<section class="section">
+    <div class="container">
+        <div class="receipt" data-confetti>
+            <div class="receipt-top">
+                <div class="tick"><i class="bi bi-check-lg"></i></div>
+                <h1 class="h3 mb-1">Thank you, @Model.DonorName.Split(' ')[0]!</h1>
+                <p class="mb-2" style="color:#CFE2D8">Your donation was successful.</p>
+                <strong>@ContentFormatter.Rupees(Model.Amount)</strong>
+                <span style="color:#CFE2D8">for @Model.Cause?.Name</span>
+            </div>
+            <table>
+                <tr><td>Transaction no.</td><td><code>@Model.TransactionRef</code></td></tr>
+                <tr><td>Date</td><td>@Model.DonatedAt.ToString("dd MMM yyyy, hh:mm tt")</td></tr>
+                <tr><td>Donor</td><td>@Model.DonorName</td></tr>
+                <tr><td>E-mail</td><td>@Model.DonorEmail</td></tr>
+                <tr><td>Paid with</td><td>@Model.CardBrand @Model.CardType.ToLower() card ending @Model.CardLast4</td></tr>
+                <tr><td>Status</td><td>@Model.Status</td></tr>
+                @if (!string.IsNullOrEmpty(Model.Message)) { <tr><td>Message</td><td>@Model.Message</td></tr> }
+            </table>
+            <div class="p-4 d-flex flex-wrap gap-2 justify-content-center no-print">
+                <button type="button" class="btn btn-outline-ga" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print receipt</button>
+                <a class="btn btn-ga" asp-controller="Programmes" asp-action="Index">See where it goes</a>
+                @if (User.GetMemberId() != null)
+                {
+                    <a class="btn btn-outline-ga" asp-controller="Invite" asp-action="Index">Invite a friend</a>
+                }
+                else
+                {
+                    <a class="btn btn-outline-ga" asp-controller="Account" asp-action="Register">Create an account</a>
+                }
+            </div>
+        </div>
+    </div>
+</section>

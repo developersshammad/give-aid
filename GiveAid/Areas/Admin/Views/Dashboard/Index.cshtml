@@ -1,0 +1,280 @@
+@model AdminDashboardViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Dashboard";
+    var today = DateTime.Today;
+    int hour = DateTime.Now.Hour;
+    string greet = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+    int open = Model.OpenQueries;
+    decimal last12 = Model.Weeks.Sum(w => w.Total);
+    var causes = Model.Causes.OrderByDescending(c => c.Raised).ToList();
+    decimal maxRaised = Math.Max(1, causes.Count == 0 ? 1 : causes.Max(c => c.Raised));
+
+    // ----- column chart geometry (SVG drawn here on the server, no chart library needed) -----
+    const double W = 640, H = 230, L = 52, R = 8, T = 10, B = 26;
+    double iw = W - L - R, ih = H - T - B;
+    double max = NiceMax((double)(Model.Weeks.Count == 0 ? 0 : Model.Weeks.Max(w => w.Total)));
+    double slot = Model.Weeks.Count == 0 ? iw : iw / Model.Weeks.Count, bw = Math.Min(30, slot - 8);
+    var inv = CultureInfo.InvariantCulture;
+}
+@functions {
+    /// <summary>Rounds the biggest value up to a tidy axis maximum (1, 2, 2.5, 5, 10 x 10^n).</summary>
+    static double NiceMax(double v)
+    {
+        if (v <= 0) return 1000;
+        double p = Math.Pow(10, Math.Floor(Math.Log10(v))), m = v / p;
+        return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p;
+    }
+    /// <summary>Short axis label: 50k, 1.5 lac.</summary>
+    static string Short(double n) => n >= 100000 ? (n / 100000).ToString(n % 100000 == 0 ? "0" : "0.#", CultureInfo.InvariantCulture) + " lac"
+                                   : n >= 1000 ? Math.Round(n / 1000).ToString(CultureInfo.InvariantCulture) + "k" : n.ToString("0", CultureInfo.InvariantCulture);
+    static string Initials(string? name) => string.Concat((name ?? "?").Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => char.ToUpperInvariant(w[0])));
+    static string Ago(DateTime d)
+    {
+        int days = (DateTime.Today - d.Date).Days;
+        return days <= 0 ? "today" : days == 1 ? "yesterday" : days + " days ago";
+    }
+}
+
+<!-- ===== Greeting + quick actions ===== -->
+<section class="dash-hero">
+    <div class="hero-row">
+        <div>
+            <h2>@greet, @(string.IsNullOrEmpty(Model.AdminName) ? "Admin" : Model.AdminName)</h2>
+            <p>@DateTime.Now.ToString("dddd d MMMM yyyy") · @(open == 0 ? "all queries are answered" : open + (open == 1 ? " query is" : " queries are") + " waiting for your reply")</p>
+        </div>
+        <div class="dash-actions">
+            <a class="primary" asp-controller="Queries" asp-action="Index"><i class="bi bi-chat-left-dots"></i>Reply to queries @if (open > 0) { <span class="count">@open</span> }</a>
+            <a asp-controller="Planner" asp-action="Index"><i class="bi bi-stars"></i>Plan with AI</a>
+            <a asp-controller="Programmes" asp-action="Create"><i class="bi bi-calendar-plus"></i>Add programme</a>
+            <a asp-controller="Gallery" asp-action="Index"><i class="bi bi-upload"></i>Upload photo</a>
+            <a asp-controller="Pages" asp-action="Index"><i class="bi bi-pencil-square"></i>Edit pages</a>
+        </div>
+    </div>
+</section>
+
+<!-- ===== Key numbers ===== -->
+<div class="kpi-grid">
+    <a class="kpi" asp-controller="Donations" asp-action="Index">
+        <span class="kpi-icon gold"><i class="bi bi-cash-coin"></i></span>
+        <div><div class="kpi-label">Total raised</div><div class="kpi-value">@ContentFormatter.Rupees(Model.TotalRaised)</div>
+            <div class="kpi-sub"><b>@ContentFormatter.Rupees(Model.RaisedThisMonth)</b> this month</div></div>
+    </a>
+    <a class="kpi" asp-controller="Donations" asp-action="Index">
+        <span class="kpi-icon"><i class="bi bi-receipt"></i></span>
+        <div><div class="kpi-label">Donations</div><div class="kpi-value">@Model.DonationCount</div>
+            <div class="kpi-sub">average gift <b>@ContentFormatter.Rupees(Model.AverageGift)</b></div></div>
+    </a>
+    <a class="kpi" asp-controller="Members" asp-action="Index">
+        <span class="kpi-icon"><i class="bi bi-people"></i></span>
+        <div><div class="kpi-label">Registered members</div><div class="kpi-value">@Model.MemberCount</div>
+            <div class="kpi-sub"><b>@Model.NewMembersThisMonth</b> joined this month</div></div>
+    </a>
+    <a class="kpi" asp-controller="Queries" asp-action="Index">
+        <span class="kpi-icon @(open > 0 ? "alert" : "")"><i class="bi bi-@(open > 0 ? "exclamation-circle" : "check2-circle")"></i></span>
+        <div><div class="kpi-label">Open queries</div><div class="kpi-value">@open</div>
+            <div class="kpi-sub">@if (Model.OldestOpenQuery.HasValue) { <span class="warn">oldest @Ago(Model.OldestOpenQuery.Value)</span> } else { <text>nothing waiting</text> }</div></div>
+    </a>
+</div>
+<div class="kpi-mini">
+    <a asp-controller="Ngos" asp-action="Index"><i class="bi bi-building"></i><b>@Model.NgoCount</b> associated NGOs</a>
+    <a asp-controller="Programmes" asp-action="Index"><i class="bi bi-calendar-event"></i><b>@Model.UpcomingProgrammes</b> upcoming programmes</a>
+    <a asp-controller="Interests" asp-action="Index"><i class="bi bi-person-raised-hand"></i><b>@Model.InterestCount</b> programme interests</a>
+    <a asp-controller="Partners" asp-action="Index"><i class="bi bi-briefcase"></i><b>@Model.PartnerCount</b> partner companies</a>
+</div>
+
+<div class="dash-grid">
+    <div>
+        <!-- ===== Donations per week: column chart ===== -->
+        <section class="dash-card">
+            <div class="dash-card-head">
+                <div><h2>Donations per week</h2><p>Last 12 weeks · hover a bar for details</p></div>
+                <div class="dash-total">@ContentFormatter.Rupees(last12)<small>in 12 weeks</small></div>
+            </div>
+            <div class="wk-chart" data-w="@W.ToString(inv)">
+                <svg viewBox="0 0 @W.ToString(inv) @H.ToString(inv)" aria-label="Donations per week, last 12 weeks">
+                    <g class="grid">
+                        @for (int k = 0; k <= 4; k++)
+                        {
+                            double v = max / 4 * k, yy = T + ih - v / max * ih;
+                            <line x1="@L.ToString(inv)" x2="@((W - R).ToString(inv))" y1="@yy.ToString("0.#", inv)" y2="@yy.ToString("0.#", inv)" />
+                            @:<text x="@((L - 8).ToString(inv))" y="@((yy + 4).ToString("0.#", inv))" text-anchor="end">@(v == 0 ? "0" : Short(v))</text>
+                        }
+                    </g>
+                    @for (int i = 0; i < Model.Weeks.Count; i++)
+                    {
+                        var w = Model.Weeks[i];
+                        double x = L + i * slot + (slot - bw) / 2;
+                        double h = w.Total == 0 ? 0 : Math.Max(2, (double)w.Total / max * ih);
+                        double top = T + ih - h, r = Math.Min(4, h);
+                        string label = w.Start.ToString("dd MMM", inv);
+                        string tip = (w.IsCurrent ? "This week" : "Week of " + label) + "|" + ContentFormatter.Rupees(w.Total) + "|" + w.Count + (w.Count == 1 ? " donation" : " donations");
+                        <g class="col" tabindex="0" role="img" aria-label="Week of @label: @ContentFormatter.Rupees(w.Total) from @w.Count donations"
+                           data-tip="@tip" data-x="@((x + bw / 2).ToString("0.#", inv))" data-y="@top.ToString("0.#", inv)">
+                            <rect class="hit" x="@((L + i * slot).ToString("0.#", inv))" y="@T.ToString(inv)" width="@slot.ToString("0.#", inv)" height="@ih.ToString("0.#", inv)" />
+                            @if (h > 0)
+                            {
+                                <path class="bar @(w.IsCurrent ? "now" : "")"
+                                      d="M@(x.ToString("0.#", inv)),@((T + ih).ToString("0.#", inv)) V@((top + r).ToString("0.#", inv)) Q@(x.ToString("0.#", inv)),@(top.ToString("0.#", inv)) @((x + r).ToString("0.#", inv)),@(top.ToString("0.#", inv)) H@((x + bw - r).ToString("0.#", inv)) Q@((x + bw).ToString("0.#", inv)),@(top.ToString("0.#", inv)) @((x + bw).ToString("0.#", inv)),@((top + r).ToString("0.#", inv)) V@((T + ih).ToString("0.#", inv)) Z" />
+                            }
+                        </g>
+                        @if (i % 2 == (Model.Weeks.Count - 1) % 2)
+                        {
+                            @:<text class="xlab" x="@((x + bw / 2).ToString("0.#", inv))" y="@((H - 6).ToString(inv))" text-anchor="middle">@label</text>
+                        }
+                    }
+                </svg>
+                <div class="chart-tip" aria-hidden="true"></div>
+            </div>
+            <div class="chart-key"><span>Past weeks</span><span class="now">This week</span></div>
+            <details>
+                <summary>Show as table</summary>
+                <table>
+                    <thead><tr><th>Week starting</th><th>Donations</th><th>Amount</th></tr></thead>
+                    <tbody>
+                        @foreach (var w in Model.Weeks)
+                        {
+                            <tr><td>@w.Start.ToString("dd MMM yyyy")</td><td>@w.Count</td><td>@ContentFormatter.Rupees(w.Total)</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </details>
+        </section>
+
+        <!-- ===== Raised by cause: horizontal bars ===== -->
+        <section class="dash-card">
+            <div class="dash-card-head">
+                <div><h2>Raised by cause</h2><p>Amount raised, and how much of each goal it covers</p></div>
+                <a asp-controller="Causes" asp-action="Index">Manage causes</a>
+            </div>
+            <div class="cause-bars">
+                @foreach (var c in causes)
+                {
+                    <div class="cause-bar @(c.Cause.IsActive ? "" : "hidden-cause")" title="@c.Cause.Name: @ContentFormatter.Rupees(c.Raised) of @ContentFormatter.Rupees(c.Cause.GoalAmount) (@c.Donors @(c.Donors == 1 ? "donation" : "donations"))">
+                        <span class="name"><i class="bi bi-@c.Cause.Icon"></i>@c.Cause.Name</span>
+                        <span class="track"><span class="fill" style="width:@((c.Raised / maxRaised * 100).ToString("0.#", inv))%"></span></span>
+                        <span class="val">@ContentFormatter.Rupees(c.Raised)<small>@c.Percent% of goal@(c.Cause.IsActive ? "" : " · hidden")</small></span>
+                    </div>
+                }
+            </div>
+        </section>
+    </div>
+
+    <div>
+        <!-- ===== Open queries, oldest first ===== -->
+        <section class="dash-card">
+            <div class="dash-card-head">
+                <div><h2>Waiting for a reply</h2><p>Oldest first</p></div>
+                <a asp-controller="Queries" asp-action="Index">All queries</a>
+            </div>
+            @if (Model.LatestQueries.Count == 0)
+            {
+                <div class="empty-ok"><i class="bi bi-check2-circle"></i>All queries are answered.</div>
+            }
+            else
+            {
+                <ul class="queue">
+                    @foreach (var q in Model.LatestQueries)
+                    {
+                        <li>
+                            <span class="avatar" aria-hidden="true">@Initials(q.Name)</span>
+                            <div class="q-main"><b>@q.Subject</b><span>@q.Name · <span class="pill @((today - q.CreatedAt.Date).Days >= 3 ? "age" : "")" style="padding:0 .4rem">@Ago(q.CreatedAt)</span></span></div>
+                            <a class="btn btn-sm btn-ga" asp-controller="Queries" asp-action="Reply" asp-route-id="@q.Id">Reply</a>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+
+        <!-- ===== Next programmes ===== -->
+        <section class="dash-card">
+            <div class="dash-card-head">
+                <div><h2>Upcoming programmes</h2><p>Next on the calendar</p></div>
+                <a asp-controller="Programmes" asp-action="Index">All</a>
+            </div>
+            @if (Model.NextProgrammes.Count == 0)
+            {
+                <p class="text-secondary mb-0">No upcoming programmes. <a asp-controller="Programmes" asp-action="Create">Add one</a>.</p>
+            }
+            else
+            {
+                <ul class="queue">
+                    @foreach (var p in Model.NextProgrammes)
+                    {
+                        int n = (p.StartDate.Date - today).Days;
+                        int joined = Model.InterestsPerProgramme.TryGetValue(p.Id, out var cnt) ? cnt : 0;
+                        <li>
+                            <span class="when"><b>@p.StartDate.ToString("dd")</b><small>@p.StartDate.ToString("MMM")</small></span>
+                            <div class="q-main"><b>@p.Title</b><span>@joined @(joined == 1 ? "person" : "people") interested · <a asp-controller="Interests" asp-action="Index" asp-route-programmeId="@p.Id">view</a></span></div>
+                            <span class="pill @(n <= 14 ? "soon" : "")">@(n <= 0 ? "now" : "in " + n + " days")</span>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+    </div>
+</div>
+
+<div class="dash-bottom">
+    <!-- ===== Latest donations ===== -->
+    <section class="dash-card">
+        <div class="dash-card-head"><div><h2>Latest donations</h2></div><a asp-controller="Donations" asp-action="Index">All donations</a></div>
+        <div class="table-wrap">
+            <table class="table table-ga mb-0">
+                <thead><tr><th>Donor</th><th>Cause</th><th>When</th><th class="text-end">Amount</th></tr></thead>
+                <tbody>
+                    @foreach (var d in Model.RecentDonations)
+                    {
+                        <tr>
+                            <td><div class="donor-cell"><span class="avatar" aria-hidden="true">@Initials(d.DonorName)</span>
+                                <span>@d.DonorName @if (d.MemberId != null) { <i class="bi bi-person-check text-success" title="Member"></i> }</span></div></td>
+                            <td>@d.Cause?.Name</td>
+                            <td class="text-nowrap">@d.DonatedAt.ToString("dd MMM, HH:mm")</td>
+                            <td class="text-end fw-semibold">@ContentFormatter.Rupees(d.Amount)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ===== Newest members ===== -->
+    <section class="dash-card">
+        <div class="dash-card-head"><div><h2>Newest members</h2></div><a asp-controller="Members" asp-action="Index">All members</a></div>
+        <ul class="queue">
+            @foreach (var m in Model.NewestMembers)
+            {
+                <li>
+                    <span class="avatar" aria-hidden="true">@Initials(m.FullName)</span>
+                    <div class="q-main"><b>@m.FullName</b><span>@m.Occupation@(string.IsNullOrEmpty(m.City) ? "" : " · " + m.City)</span></div>
+                    <a class="pill" asp-controller="Members" asp-action="Details" asp-route-id="@m.Id" style="text-decoration:none">@Ago(m.RegisteredAt)</a>
+                </li>
+            }
+        </ul>
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+        // tooltip for the weekly chart (mouse hover and keyboard focus)
+        document.querySelectorAll(".wk-chart").forEach(function (c) {
+            var tip = c.querySelector(".chart-tip"), svg = c.querySelector("svg"), W = +c.getAttribute("data-w");
+            function show(g) {
+                var p = g.getAttribute("data-tip").split("|");
+                tip.textContent = "";
+                tip.append(p[0], document.createElement("br"));
+                var b = document.createElement("b"); b.textContent = p[1]; tip.append(b, " · " + p[2]);
+                var k = svg.getBoundingClientRect().width / W;
+                tip.style.left = (+g.getAttribute("data-x") * k) + "px";
+                tip.style.top = (+g.getAttribute("data-y") * k) + "px";
+                tip.classList.add("show");
+            }
+            c.querySelectorAll(".col").forEach(function (g) {
+                g.addEventListener("pointerenter", function () { show(g); });
+                g.addEventListener("focus", function () { show(g); });
+                g.addEventListener("pointerleave", function () { tip.classList.remove("show"); });
+                g.addEventListener("blur", function () { tip.classList.remove("show"); });
+            });
+        });
+    </script>
+}

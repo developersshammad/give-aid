@@ -1,0 +1,53 @@
+@model Cause
+@{ ViewData["Title"] = Model.Id == 0 ? "Add cause" : "Edit cause"; }
+
+<form asp-action="@(Model.Id == 0 ? "Create" : "Edit")" asp-route-id="@(Model.Id == 0 ? null : Model.Id)" method="post" class="panel" style="max-width:48rem" novalidate>
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Icon" class="form-label">Icon name</label>
+            <div class="input-group">
+                <span class="input-group-text"><i id="iconPreview" class="bi bi-@Model.Icon"></i></span>
+                <input asp-for="Icon" class="form-control" />
+            </div>
+            <div class="form-text">Any Bootstrap Icons name, e.g. book, heart, universal-access, house-heart.</div>
+        </div>
+        <div class="col-12">
+            <label asp-for="Description" class="form-label"></label>
+            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+        <div class="col-md-5">
+            <label asp-for="GoalAmount" class="form-label"></label>
+            <input asp-for="GoalAmount" class="form-control" type="number" min="0" step="1000" />
+            <span asp-validation-for="GoalAmount" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="DisplayOrder" class="form-label"></label>
+            <input asp-for="DisplayOrder" class="form-control" type="number" />
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+            <div class="form-check">
+                <input asp-for="IsActive" class="form-check-input" />
+                <label asp-for="IsActive" class="form-check-label"></label>
+            </div>
+        </div>
+    </div>
+    <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-ga">Save</button>
+        <a asp-action="Index" class="btn btn-outline-ga">Cancel</a>
+    </div>
+</form>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.getElementById("Icon").addEventListener("input", function () {
+            document.getElementById("iconPreview").className = "bi bi-" + this.value.trim();
+        });
+    </script>
+}

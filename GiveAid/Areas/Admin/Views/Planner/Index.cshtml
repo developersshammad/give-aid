@@ -1,0 +1,120 @@
+@model PlannerIndexViewModel
+@{
+    ViewData["Title"] = "AI Programme Planner";
+    var examples = new[]
+    {
+        "Free eye camp in Mithi for 1,500 patients, second week of November",
+        "Winter blankets for 3,000 children in Quetta in December",
+        "School admission drive in Orangi Town for 400 children on 15 January",
+        "Lahore mein 200 logon ke liye wheelchair distribution, 12-14 December"
+    };
+}
+
+<section class="pl-hero">
+    <div>
+        <h2><i class="bi bi-stars"></i> Describe a programme. The planner prepares it, you decide.</h2>
+        <p>It checks your NGOs, calendar, weather, volunteers and past budgets, then proposes a draft programme and volunteer invitations.
+           <b>Nothing is created or sent until you approve it.</b></p>
+    </div>
+    <span class="pl-mode pl-mode-@Model.Mode.ToLower()" title="Change in appsettings.json → Planner:Provider">
+        <i class="bi bi-@(Model.Mode == "Demo" ? "cpu" : "stars")"></i>@(Model.Mode == "Demo" ? "Demo mode (built-in rules)" : Model.Mode + " AI")
+    </span>
+</section>
+
+@if (Model.ModeNote != null)
+{
+    <div class="alert alert-ga-error"><i class="bi bi-info-circle me-2"></i>@Model.ModeNote</div>
+}
+
+<div class="row g-4">
+    <div class="col-xl-8">
+        <form asp-action="Create" method="post" class="panel" id="planForm" novalidate>
+            <label asp-for="Goal" class="form-label h5 mb-2">What do you want to organise?</label>
+            <textarea asp-for="Goal" class="form-control pl-goal" rows="3" maxlength="1000"
+                      placeholder="e.g. Free eye camp in Mithi for 1,500 patients, second week of November"></textarea>
+            <span asp-validation-for="Goal" class="text-danger"></span>
+            <div class="pl-examples" aria-label="Example goals">
+                <span>Try:</span>
+                @foreach (var e in examples)
+                {
+                    <button type="button" class="pl-chip" data-example="@e">@e</button>
+                }
+            </div>
+            <div class="d-flex flex-wrap gap-2 align-items-center mt-3">
+                <button type="submit" class="btn btn-ga btn-lg"><i class="bi bi-stars me-1"></i>Make a plan</button>
+                <span class="small text-secondary">Works in English or Roman Urdu. Mention the place, dates and number of people for the best plan.</span>
+            </div>
+        </form>
+
+        <div class="pl-how">
+            <div><span>1</span><b>You describe</b><small>One sentence is enough.</small></div>
+            <div><span>2</span><b>Planner checks</b><small>NGOs, calendar, weather, volunteers, past budgets.</small></div>
+            <div><span>3</span><b>It proposes</b><small>A hidden draft programme and invitations.</small></div>
+            <div><span>4</span><b>You approve</b><small>Approve, edit or reject each proposal.</small></div>
+        </div>
+    </div>
+
+    <div class="col-xl-4">
+        <div class="dash-card">
+            <div class="dash-card-head"><div><h2>Recent plans</h2><p>Every step is kept as an audit trail</p></div></div>
+            @if (Model.Sessions.Count == 0)
+            {
+                <p class="text-secondary mb-0">No plans yet. Try one of the examples.</p>
+            }
+            else
+            {
+                <ul class="queue">
+                    @foreach (var s in Model.Sessions)
+                    {
+                        <li>
+                            <div class="q-main">
+                                <b><a asp-action="Details" asp-route-id="@s.Id">@s.Goal</a></b>
+                                <span>@s.CreatedAt.ToString("dd MMM, HH:mm") · @s.Mode · @s.CreatedBy</span>
+                            </div>
+                            <partial name="_Status" model="s.Status" />
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- shown while the planner works -->
+<div class="pl-busy" id="plBusy" hidden role="status" aria-live="polite">
+    <div class="pl-busy-card">
+        <div class="pl-spinner" aria-hidden="true"></div>
+        <h2>Planning…</h2>
+        <ul id="plBusySteps">
+            <li>Understanding the goal</li><li>Picking the NGO</li><li>Checking the calendar</li>
+            <li>Checking the weather</li><li>Finding volunteers</li><li>Estimating the budget</li><li>Writing the draft</li>
+        </ul>
+        <p class="small text-secondary mb-0">@(Model.Mode == "Demo" ? "Demo mode takes a few seconds." : "The AI may take up to a minute.")</p>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // example chips fill the goal box
+        document.querySelectorAll("[data-example]").forEach(function (b) {
+            b.addEventListener("click", function () {
+                var t = document.getElementById("Goal");
+                t.value = b.getAttribute("data-example");
+                t.focus();
+            });
+        });
+        // "Planning..." overlay with the steps lighting up one by one
+        document.getElementById("planForm").addEventListener("submit", function (e) {
+            if (window.jQuery && $(this).valid && !$(this).valid()) return;
+            if (document.getElementById("Goal").value.trim().length < 10) return;
+            var busy = document.getElementById("plBusy"), items = busy.querySelectorAll("li"), i = 0;
+            busy.hidden = false;
+            this.querySelector("button[type=submit]").disabled = true;
+            (function next() {
+                if (i > 0) items[i - 1].className = "done";
+                if (i < items.length) { items[i].className = "now"; i++; setTimeout(next, 900); }
+            })();
+        });
+    </script>
+}

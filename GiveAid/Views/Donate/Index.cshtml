@@ -1,0 +1,170 @@
+@model DonateViewModel
+@{
+    ViewData["Title"] = "Donate";
+    var presets = new[] { 1000, 2500, 5000, 10000, 25000 };
+    // Card fields are validated by donate.js (browser) and CardValidator (server), not by jQuery,
+    // so their server-side error messages are printed here manually.
+    string FieldError(string key) => ViewData.ModelState[key]?.Errors.FirstOrDefault()?.ErrorMessage ?? "";
+}
+<partial name="_PageHead" model="@(("Make a donation", (string?)"Choose a cause, choose an amount. Your full card number is never stored."))" />
+
+<section class="section">
+    <div class="container">
+        <form asp-action="Index" method="post" id="donateForm" novalidate>
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-ga-error py-2" role="alert"></div>
+
+                    <!-- Step 1: cause -->
+                    <fieldset class="panel mb-4">
+                        <legend class="form-step"><span class="num">1</span>Choose a cause</legend>
+                        <div class="cause-picker">
+                            @foreach (var c in Model.Causes)
+                            {
+                                <div>
+                                    <input type="radio" asp-for="CauseId" value="@c.Cause.Id" id="cause@(c.Cause.Id)" data-name="@c.Cause.Name" />
+                                    <label for="cause@(c.Cause.Id)">
+                                        <i class="bi bi-@c.Cause.Icon" aria-hidden="true"></i>
+                                        <span><b>@c.Cause.Name</b><small>@c.Percent% funded</small></span>
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                        <span asp-validation-for="CauseId" class="text-danger d-block mt-2"></span>
+                    </fieldset>
+
+                    <!-- Step 2: amount -->
+                    <fieldset class="panel mb-4">
+                        <legend class="form-step"><span class="num">2</span>Amount</legend>
+                        <div class="d-flex flex-wrap gap-2 mb-3" id="amountPresets">
+                            @foreach (var a in presets)
+                            {
+                                <button type="button" class="btn btn-outline-ga" data-amount="@a">Rs @a.ToString("#,##0")</button>
+                            }
+                        </div>
+                        <label asp-for="Amount" class="form-label">Or type any amount (Rs)</label>
+                        <div class="input-group" style="max-width:20rem">
+                            <span class="input-group-text">Rs</span>
+                            <input asp-for="Amount" class="form-control" type="number" min="100" step="1" inputmode="numeric" />
+                        </div>
+                        <span asp-validation-for="Amount" class="text-danger"></span>
+                    </fieldset>
+
+                    <!-- Step 3: donor -->
+                    <fieldset class="panel mb-4">
+                        <legend class="form-step"><span class="num">3</span>Your details</legend>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="DonorName" class="form-label"></label>
+                                <input asp-for="DonorName" class="form-control" autocomplete="name" />
+                                <span asp-validation-for="DonorName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="DonorEmail" class="form-label"></label>
+                                <input asp-for="DonorEmail" class="form-control" autocomplete="email" />
+                                <span asp-validation-for="DonorEmail" class="text-danger"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="Message" class="form-label">Message <span class="text-secondary fw-normal">(optional)</span></label>
+                                <input asp-for="Message" class="form-control" placeholder="In memory of..., For my mother's recovery..." />
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input asp-for="IsAnonymous" class="form-check-input" />
+                                    <label asp-for="IsAnonymous" class="form-check-label"></label>
+                                </div>
+                            </div>
+                        </div>
+                        @if (User.GetMemberId() == null)
+                        {
+                            <p class="small text-secondary mt-3 mb-0">Giving as a guest. <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="/Donate">Log in</a> to keep this donation in your history.</p>
+                        }
+                    </fieldset>
+
+                    <!-- Step 4: card -->
+                    <fieldset class="panel">
+                        <legend class="form-step"><span class="num">4</span>Card payment</legend>
+                        <!-- Live 3D preview of the card (js/donate.js). Turns over when the CVV box is focused. -->
+                        <div class="card3d-stage" aria-hidden="true">
+                            <div class="card3d" id="card3d" data-brand="">
+                                <div class="face front">
+                                    <span class="c-brand" id="c3Brand">Give-AID</span>
+                                    <div class="chip"></div>
+                                    <div class="c-number" id="c3Number">•••• •••• •••• ••••</div>
+                                    <div class="c-row">
+                                        <div><small>Card holder</small><b id="c3Holder">Your name</b></div>
+                                        <div class="text-end"><small>Expires</small><b id="c3Expiry">MM/YY</b></div>
+                                    </div>
+                                </div>
+                                <div class="face back">
+                                    <div class="stripe"></div>
+                                    <div class="sign" id="c3Cvv">•••</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-type-toggle mb-3" role="radiogroup" aria-label="Card type">
+                            <input type="radio" asp-for="CardType" value="Credit" id="ctCredit" /><label for="ctCredit">Credit card</label>
+                            <input type="radio" asp-for="CardType" value="Debit" id="ctDebit" /><label for="ctDebit">Debit card</label>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label asp-for="CardNumber" class="form-label"></label>
+                                <div class="card-number-wrap">
+                                    <input id="CardNumber" name="CardNumber" value="@Model.CardNumber" class="form-control" inputmode="numeric" autocomplete="cc-number" placeholder="1234 5678 9012 3456" maxlength="23" aria-describedby="CardNumber-error" />
+                                    <span class="brand-badge" id="brandBadge" hidden></span>
+                                </div>
+                                <span class="text-danger field-validation-error" id="CardNumber-error">@FieldError("CardNumber")</span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="CardHolder" class="form-label"></label>
+                                <input id="CardHolder" name="CardHolder" value="@Model.CardHolder" class="form-control" autocomplete="cc-name" style="text-transform:uppercase" aria-describedby="CardHolder-error" />
+                                <span class="text-danger field-validation-error" id="CardHolder-error">@FieldError("CardHolder")</span>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label asp-for="Expiry" class="form-label"></label>
+                                <input id="Expiry" name="Expiry" value="@Model.Expiry" class="form-control" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/YY" maxlength="5" aria-describedby="Expiry-error" />
+                                <span class="text-danger field-validation-error" id="Expiry-error">@FieldError("Expiry")</span>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label asp-for="Cvv" class="form-label"></label>
+                                <input id="Cvv" name="Cvv" class="form-control" type="password" inputmode="numeric" autocomplete="cc-csc" maxlength="4" aria-describedby="Cvv-error" />
+                                <span class="text-danger field-validation-error" id="Cvv-error">@FieldError("Cvv")</span>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <!-- Summary -->
+                <div class="col-lg-4">
+                    <aside class="summary-box" aria-live="polite">
+                        <h2 class="h4 mb-0">Your gift</h2>
+                        <dl>
+                            <dt>Cause</dt><dd id="sumCause">Not chosen</dd>
+                            <dt>Payment</dt><dd id="sumCard">Credit card</dd>
+                        </dl>
+                        <!-- 3D stack of gold coins that grows with the amount (js/donate.js) -->
+                        <div class="coin-stack" id="coinStack" aria-hidden="true"></div>
+                        <div class="total"><span>Total</span><strong id="sumAmount">Rs 0</strong></div>
+                        <button type="submit" class="btn btn-donate btn-lg w-100 mt-3"><i class="bi bi-lock-fill me-1"></i>Donate securely</button>
+                        <div class="test-cards">
+                            This is a demo payment, no money is charged. Test cards:<br />
+                            Visa <code>4111 1111 1111 1111</code><br />
+                            MasterCard <code>5555 5555 5555 4444</code><br />
+                            Any future expiry, any 3-digit CVV.
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <environment include="Development">
+        <script src="~/js/donate.js" asp-append-version="true"></script>
+    </environment>
+    <environment exclude="Development">
+        <script src="~/js/donate.min.js" asp-append-version="true"></script>
+    </environment>
+}

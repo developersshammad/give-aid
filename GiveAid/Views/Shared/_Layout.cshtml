@@ -1,0 +1,162 @@
+@{
+    // which menu item is highlighted
+    string controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    string action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    string Active(string c, string? a = null) =>
+        controller == c && (a == null || action == a) ? "active" : "";
+    bool isMember = User.GetMemberId() != null;
+}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="utf-8" />
+    <script>document.documentElement.classList.add("js");</script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] is string t && t.Length > 0 ? t + " | Give-AID" : "Give-AID | Give to the cause you choose")</title>
+    <meta name="description" content="Give-AID brings NGOs together so you can donate to the cause you choose: children, education, disabled, women, youth and elderly." />
+    <link rel="icon" href="~/images/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" />
+    <!-- readable CSS while developing, one minified file on the live site (ClientSrc/build.mjs makes it) -->
+    <environment include="Development">
+        <link rel="stylesheet" href="~/css/theme3d.css" asp-append-version="true" />
+    </environment>
+    <environment exclude="Development">
+        <link rel="stylesheet" href="~/css/public.min.css" asp-append-version="true" />
+    </environment>
+    <meta name="theme-color" content="#04130E" />
+    @await RenderSectionAsync("Head", required: false)
+</head>
+<body>
+    <!-- 3D theme: loading coin, scroll progress and the moving aurora background -->
+    <div class="preloader" aria-hidden="true"><div class="coin"><i class="bi bi-heart-fill"></i><i class="bi bi-heart-fill"></i></div></div>
+    <div class="scroll-progress" aria-hidden="true"></div>
+    <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+    <div class="space-bg" data-space3d aria-hidden="true"></div>
+
+    <a class="visually-hidden-focusable btn btn-donate position-absolute m-2" style="z-index:2000" href="#main">Skip to content</a>
+
+    <!-- Top strip: contact details + account links -->
+    <div class="topbar">
+        <div class="container">
+            <div class="d-none d-md-flex gap-4">
+                <span><i class="bi bi-telephone me-1"></i>+92 21 3456 7890</span>
+                <span><i class="bi bi-envelope me-1"></i><a href="mailto:info@giveaid.org">info@giveaid.org</a></span>
+            </div>
+            <div class="d-flex gap-3 ms-auto">
+                @if (isMember)
+                {
+                    <a asp-controller="Invite" asp-action="Index"><i class="bi bi-envelope-heart me-1"></i>Invite friends</a>
+                    <a asp-controller="Account" asp-action="Dashboard"><i class="bi bi-person-circle me-1"></i>@User.GetDisplayName()</a>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-link p-0 text-white text-decoration-none" style="font-size:inherit;font-weight:400">Log out</button>
+                    </form>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login"><i class="bi bi-box-arrow-in-right me-1"></i>Log in</a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Main navigation -->
+    <nav class="navbar navbar-expand-xl site-nav" aria-label="Main menu">
+        <div class="container">
+            <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                <span class="brand-mark"><i class="bi bi-heart-fill"></i></span>Give-AID
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Open menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item"><a class="nav-link @Active("Home", "Index")" asp-controller="Home" asp-action="Index">Home</a></li>
+                    <li class="nav-item"><a class="nav-link @Active("Donate")" asp-controller="Donate" asp-action="Index">Donate</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle @Active("About")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">About us</a>
+                        <ul class="dropdown-menu">
+                            @await Component.InvokeAsync("AboutMenu")
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" asp-controller="Ngos" asp-action="Index">Associated NGOs</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a class="nav-link @Active("Programmes")" asp-controller="Programmes" asp-action="Index">Programmes</a></li>
+                    <li class="nav-item"><a class="nav-link @Active("Gallery")" asp-controller="Gallery" asp-action="Index">Gallery</a></li>
+                    <li class="nav-item"><a class="nav-link @Active("Partners")" asp-controller="Partners" asp-action="Index">Our partners</a></li>
+                    <li class="nav-item"><a class="nav-link @Active("Help")" asp-controller="Help" asp-action="Index">Help centre</a></li>
+                    <li class="nav-item"><a class="nav-link @Active("Home", "Contact")" asp-controller="Home" asp-action="Contact">Contact us</a></li>
+                    @if (!isMember)
+                    {
+                        <li class="nav-item"><a class="nav-link @Active("Account", "Register")" asp-controller="Account" asp-action="Register">Register</a></li>
+                    }
+                </ul>
+                <a class="btn btn-donate" asp-controller="Donate" asp-action="Index"><i class="bi bi-heart-fill me-1"></i>Donate now</a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main">
+        @RenderBody()
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <a class="navbar-brand text-white fs-4 fw-bold d-inline-flex align-items-center gap-2 mb-3" style="font-family:var(--ga-font-display)" asp-controller="Home" asp-action="Index">
+                        <span class="brand-mark"><i class="bi bi-heart-fill"></i></span>Give-AID
+                    </a>
+                    <p>An umbrella of NGOs raising funds for children, education, the disabled, women, youth and the elderly. Established with the support of leading companies, so every public rupee goes to programmes.</p>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <h2>Give</h2>
+                    <ul>
+                        <li><a asp-controller="Donate" asp-action="Index">Donate</a></li>
+                        <li><a asp-controller="Programmes" asp-action="Index">Programmes</a></li>
+                        <li><a asp-controller="Account" asp-action="Register">Register</a></li>
+                        <li><a asp-controller="Invite" asp-action="Index">Invite a friend</a></li>
+                    </ul>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <h2>About</h2>
+                    <ul>
+                        <li><a href="/About/what-we-do">What we do</a></li>
+                        <li><a href="/About/our-mission">Our mission</a></li>
+                        <li><a href="/About/our-team">Our team</a></li>
+                        <li><a href="/About/careers">Careers</a></li>
+                        <li><a asp-controller="Ngos" asp-action="Index">Associated NGOs</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4">
+                    <h2>Reach us</h2>
+                    <ul>
+                        <li><i class="bi bi-geo-alt me-2"></i>Plot 14, Shahrah-e-Faisal, Karachi</li>
+                        <li><i class="bi bi-telephone me-2"></i>+92 21 3456 7890</li>
+                        <li><i class="bi bi-envelope me-2"></i><a href="mailto:info@giveaid.org">info@giveaid.org</a></li>
+                        <li><i class="bi bi-question-circle me-2"></i><a asp-controller="Help" asp-action="Index">Help centre</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="legal">
+                <span>&copy; @DateTime.Now.Year Give-AID Foundation. All rights reserved.</span>
+                <a href="/Admin">Admin panel</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <environment include="Development">
+        <script src="~/js/fx.js" asp-append-version="true"></script>
+    </environment>
+    <environment exclude="Development">
+        <script src="~/js/fx.min.js" asp-append-version="true"></script>
+    </environment>
+    <!-- 3D scenes: bundled with only the parts of three.js they use (ClientSrc/3d -> wwwroot/js/dist) -->
+    <script type="module" src="~/js/dist/space3d.js" asp-append-version="true"></script>
+    <script type="module" src="~/js/dist/wave3d.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

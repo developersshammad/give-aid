@@ -1,0 +1,39 @@
+@model Ngo
+@{
+    ViewData["Title"] = Model.Name;
+    var programmes = ViewBag.Programmes as List<Programme> ?? new();
+}
+<partial name="_PageHead" model="@((Model.Name, (string?)(Model.FocusArea + (string.IsNullOrEmpty(Model.City) ? "" : ", " + Model.City))))" />
+
+<section class="section">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-8">
+                <div class="prose"><p class="fs-5">@Model.Description</p></div>
+                <h2 class="h3 mt-5 mb-3">Programmes by this NGO</h2>
+                @if (programmes.Count == 0) { <p class="text-secondary">No programmes listed yet.</p> }
+                <div class="row g-3">
+                    @foreach (var p in programmes)
+                    {
+                        p.Ngo = Model;
+                        <div class="col-md-6"><partial name="_ProgrammeCard" model="p" /></div>
+                    }
+                </div>
+            </div>
+            <aside class="col-lg-4">
+                <div class="panel">
+                    <h2 class="panel-title">Contact</h2>
+                    <dl class="mb-0">
+                        @if (!string.IsNullOrEmpty(Model.RegistrationNo)) { <dt>Registration no.</dt><dd>@Model.RegistrationNo</dd> }
+                        @if (Model.EstablishedYear.HasValue) { <dt>Established</dt><dd>@Model.EstablishedYear</dd> }
+                        @if (!string.IsNullOrEmpty(Model.ContactPerson)) { <dt>Contact person</dt><dd>@Model.ContactPerson</dd> }
+                        @if (!string.IsNullOrEmpty(Model.Email)) { <dt>E-mail</dt><dd><a href="mailto:@Model.Email">@Model.Email</a></dd> }
+                        @if (!string.IsNullOrEmpty(Model.Phone)) { <dt>Phone</dt><dd>@Model.Phone</dd> }
+                        @if (!string.IsNullOrEmpty(Model.Website)) { <dt>Website</dt><dd class="mb-0"><a href="@Model.Website" target="_blank" rel="noopener">@Model.Website</a></dd> }
+                    </dl>
+                </div>
+                <a class="btn btn-outline-ga mt-3" asp-action="Index">All NGOs</a>
+            </aside>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,30 @@
+@model List<CauseProgress>
+@{ ViewData["Title"] = "Donation causes"; }
+@section Actions { <a class="btn btn-ga" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>Add cause</a> }
+
+<p class="text-secondary">These are the categories donors can choose on the Donate page.</p>
+<div class="table-wrap">
+    <table class="table table-ga">
+        <thead><tr><th>#</th><th>Cause</th><th>Status</th><th>Goal</th><th style="min-width:14rem">Raised</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var c in Model)
+            {
+                <tr>
+                    <td>@c.Cause.DisplayOrder</td>
+                    <td><i class="bi bi-@c.Cause.Icon me-2 text-success"></i><b>@c.Cause.Name</b><div class="small text-secondary">@ContentFormatter.Excerpt(c.Cause.Description, 70)</div></td>
+                    <td><span class="status @(c.Cause.IsActive ? "status-answered" : "status-open")">@(c.Cause.IsActive ? "Active" : "Hidden")</span></td>
+                    <td>@ContentFormatter.Rupees(c.Cause.GoalAmount)</td>
+                    <td><partial name="_RaiseBar" model="c" /></td>
+                    <td>
+                        <div class="actions">
+                            <a class="btn btn-sm btn-outline-ga btn-icon" asp-action="Edit" asp-route-id="@c.Cause.Id" title="Edit"><i class="bi bi-pencil"></i><span class="visually-hidden">Edit @c.Cause.Name</span></a>
+                            <form asp-action="Delete" asp-route-id="@c.Cause.Id" method="post" data-confirm="Delete the cause '@c.Cause.Name'?">
+                                <button class="btn btn-sm btn-outline-danger btn-icon" title="Delete"><i class="bi bi-trash"></i><span class="visually-hidden">Delete @c.Cause.Name</span></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

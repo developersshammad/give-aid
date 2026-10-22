@@ -1,0 +1,30 @@
+@model List<Ngo>
+@{ ViewData["Title"] = "Associated NGOs"; }
+@section Actions { <a class="btn btn-ga" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>Add NGO</a> }
+
+<div class="table-wrap">
+    <table class="table table-ga">
+        <thead><tr><th>NGO</th><th>Focus</th><th>City</th><th>Contact</th><th>Added</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var n in Model)
+            {
+                <tr>
+                    <td><b>@n.Name</b><div class="small text-secondary">@n.RegistrationNo</div></td>
+                    <td><span class="tag">@n.FocusArea</span></td>
+                    <td>@n.City</td>
+                    <td class="small">@n.ContactPerson<br />@n.Email</td>
+                    <td class="small">@n.AddedAt.ToString("dd MMM yyyy")</td>
+                    <td>
+                        <div class="actions">
+                            <a class="btn btn-sm btn-outline-ga btn-icon" asp-area="" asp-controller="Ngos" asp-action="Details" asp-route-id="@n.Id" target="_blank" title="View on website"><i class="bi bi-eye"></i><span class="visually-hidden">View @n.Name</span></a>
+                            <a class="btn btn-sm btn-outline-ga btn-icon" asp-action="Edit" asp-route-id="@n.Id" title="Edit"><i class="bi bi-pencil"></i><span class="visually-hidden">Edit @n.Name</span></a>
+                            <form asp-action="Delete" asp-route-id="@n.Id" method="post" data-confirm="Delete '@n.Name'? Its programmes will stay but without an NGO.">
+                                <button class="btn btn-sm btn-outline-danger btn-icon" title="Delete"><i class="bi bi-trash"></i><span class="visually-hidden">Delete @n.Name</span></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

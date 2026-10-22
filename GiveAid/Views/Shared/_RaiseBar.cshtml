@@ -1,0 +1,10 @@
+@model CauseProgress
+<div class="raise">
+    <div class="raise-bar" role="progressbar" aria-label="@Model.Cause.Name raised" aria-valuenow="@Model.Percent" aria-valuemin="0" aria-valuemax="100">
+        <span style="width:@(Model.Percent)%"></span>
+    </div>
+    <div class="raise-meta">
+        <span><b>@ContentFormatter.Rupees(Model.Raised)</b> raised</span>
+        <span>@Model.Percent% of @ContentFormatter.Rupees(Model.Cause.GoalAmount)</span>
+    </div>
+</div>

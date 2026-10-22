@@ -1,0 +1,12 @@
+@* Shared by the admin layout and the admin login page.
+   Picks the Nova (night) or Day theme BEFORE the page paints, so it never flashes. *@
+<script>
+    (function () {
+        var day = false;
+        try { day = localStorage.getItem("ga-admin-theme") === "day"; } catch (e) { }
+        var r = document.documentElement;
+        if (!day) r.classList.add("nova");
+        r.setAttribute("data-bs-theme", day ? "light" : "dark");
+    })();
+</script>
+<meta name="theme-color" content="#03100D" />

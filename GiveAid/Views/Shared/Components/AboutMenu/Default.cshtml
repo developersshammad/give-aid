@@ -1,0 +1,6 @@
+@model List<ContentPage>
+@{ var current = Context.Request.RouteValues["slug"]?.ToString(); }
+@foreach (var p in Model)
+{
+    <li><a class="dropdown-item @(current == p.Slug ? "active" : "")" href="/About/@p.Slug">@p.Title</a></li>
+}

@@ -1,0 +1,73 @@
+@model AdminLoginViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin login | Give-AID</title>
+    <link rel="icon" href="~/images/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" />
+    <environment include="Development">
+        <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/admin-nova.css" asp-append-version="true" />
+    </environment>
+    <environment exclude="Development">
+        <link rel="stylesheet" href="~/css/admin.min.css" asp-append-version="true" />
+    </environment>
+    <partial name="_NovaHead" />
+</head>
+<body>
+    <div class="nova-space" data-nova3d aria-hidden="true"></div>
+    <button type="button" class="hud-btn theme-switch-fixed" data-theme-toggle aria-pressed="true"><i class="bi bi-sun"></i><span class="lbl">Day</span></button>
+    <main class="admin-login">
+        <form asp-area="Admin" asp-controller="Auth" asp-action="Login" method="post" class="panel" novalidate>
+            <span class="login-scan" aria-hidden="true"></span>
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <span class="brand-mark"><i class="bi bi-heart-fill"></i></span>
+                <div><h1 class="h4 m-0">Give-AID admin</h1><small class="text-secondary">Sign in to manage the website</small></div>
+            </div>
+            <div asp-validation-summary="ModelOnly" class="alert alert-ga-error py-2" role="alert"></div>
+            <input type="hidden" asp-for="ReturnUrl" />
+            <div class="mb-3">
+                <label asp-for="Username" class="form-label"></label>
+                <input asp-for="Username" class="form-control" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" autofocus />
+                <span asp-validation-for="Username" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label"></label>
+                <div class="input-group">
+                    <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                    <button type="button" class="btn btn-outline-ga" id="togglePw" aria-label="Show password" title="Show password"><i class="bi bi-eye"></i></button>
+                </div>
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-ga w-100"><i class="bi bi-shield-lock me-1"></i>Sign in</button>
+            <div class="login-status"><span class="dot" aria-hidden="true"></span>Only Give-AID administrators can sign in here.</div>
+            <p class="small text-secondary mt-3 mb-0">Default: <b>admin</b> (or admin@giveaid.org) / <b>Admin@123</b> &nbsp; <a href="/">Back to website</a></p>
+        </form>
+    </main>
+    <script src="~/lib/jquery/jquery.min.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+    <environment include="Development">
+        <script src="~/js/admin-nova.js" asp-append-version="true"></script>
+    </environment>
+    <environment exclude="Development">
+        <script src="~/js/admin-nova.min.js" asp-append-version="true"></script>
+    </environment>
+    <script type="module" src="~/js/dist/admin3d.js" asp-append-version="true"></script>
+    <script>
+        // show / hide the password so typing mistakes are easy to spot
+        document.getElementById("togglePw").addEventListener("click", function () {
+            var pw = document.getElementById("Password"), show = pw.type === "password";
+            pw.type = show ? "text" : "password";
+            this.innerHTML = show ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
+            this.setAttribute("aria-label", show ? "Hide password" : "Show password");
+        });
+    </script>
+</body>
+</html>

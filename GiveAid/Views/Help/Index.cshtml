@@ -1,0 +1,62 @@
+@model HelpViewModel
+@{ ViewData["Title"] = "Help centre"; }
+<partial name="_PageHead" model="@((Model.Page.Title, Model.Page.Subtitle))" />
+
+<section class="section">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-7">
+                <div class="prose">@ContentFormatter.ToHtml(Model.Page.Body)</div>
+
+                @if (Model.MyQueries.Count > 0)
+                {
+                    <h2 class="h3 mt-5 mb-3">My questions</h2>
+                    @foreach (var q in Model.MyQueries)
+                    {
+                        <div class="panel mb-2 py-3">
+                            <div class="d-flex justify-content-between gap-2">
+                                <b>@q.Subject</b>
+                                <span class="status @(q.Status == "Open" ? "status-open" : "status-answered")">@q.Status</span>
+                            </div>
+                            <p class="mb-0 mt-1">@q.Message</p>
+                            @if (!string.IsNullOrEmpty(q.Reply)) { <div class="reply-bubble"><b>Reply:</b> @q.Reply</div> }
+                        </div>
+                    }
+                }
+            </div>
+            <div class="col-lg-5">
+                <partial name="_Alerts" />
+                <form asp-action="Ask" method="post" class="panel" style="position:sticky;top:1rem" novalidate>
+                    <h2 class="panel-title">Raise a query</h2>
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="mb-3">
+                        <label asp-for="Form.Name" class="form-label">Your name</label>
+                        <input asp-for="Form.Name" class="form-control" autocomplete="name" />
+                        <span asp-validation-for="Form.Name" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Form.Email" class="form-label"></label>
+                        <input asp-for="Form.Email" class="form-control" autocomplete="email" />
+                        <span asp-validation-for="Form.Email" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Form.Subject" class="form-label"></label>
+                        <input asp-for="Form.Subject" class="form-control" />
+                        <span asp-validation-for="Form.Subject" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Form.Message" class="form-label">Your question</label>
+                        <textarea asp-for="Form.Message" class="form-control" rows="5"></textarea>
+                        <span asp-validation-for="Form.Message" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-ga w-100">Send query</button>
+                    @if (User.GetMemberId() == null)
+                    {
+                        <p class="small text-secondary mt-2 mb-0">We reply by e-mail. <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="/Help">Log in</a> to also see replies here.</p>
+                    }
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

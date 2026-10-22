@@ -1,0 +1,137 @@
+@model RegisterViewModel
+@{
+    ViewData["Title"] = "Register";
+    var causes = ViewBag.Causes as List<string> ?? new();
+}
+<partial name="_PageHead" model="@(("Create your account", (string?)"It takes two minutes. You can donate, follow your gifts, join programmes and invite friends."))" />
+
+<section class="section">
+    <div class="container" style="max-width:62rem">
+        <form asp-action="Register" method="post" class="panel" novalidate>
+            <div asp-validation-summary="ModelOnly" class="alert alert-ga-error py-2" role="alert"></div>
+
+            <fieldset class="mb-4">
+                <legend class="form-step"><span class="num">1</span>Personal details</legend>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="FullName" class="form-label"></label>
+                        <input asp-for="FullName" class="form-control" autocomplete="name" />
+                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" autocomplete="email" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Phone" class="form-label"></label>
+                        <input asp-for="Phone" class="form-control" placeholder="0300-1234567" autocomplete="tel" />
+                        <span asp-validation-for="Phone" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Gender" class="form-label"></label>
+                        <select asp-for="Gender" class="form-select">
+                            <option value="">Select</option>
+                            @foreach (var g in GiveAid.Controllers.AccountController.Genders) { <option>@g</option> }
+                        </select>
+                        <span asp-validation-for="Gender" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="DateOfBirth" class="form-label"></label>
+                        <input asp-for="DateOfBirth" class="form-control" max="@DateTime.Today.AddYears(-13).ToString("yyyy-MM-dd")" />
+                        <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Address" class="form-label">Address <span class="text-secondary fw-normal">(optional)</span></label>
+                        <input asp-for="Address" class="form-control" autocomplete="street-address" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="City" class="form-label"></label>
+                        <input asp-for="City" class="form-control" autocomplete="address-level2" />
+                        <span asp-validation-for="City" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Country" class="form-label"></label>
+                        <input asp-for="Country" class="form-control" autocomplete="country-name" />
+                        <span asp-validation-for="Country" class="text-danger"></span>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="mb-4">
+                <legend class="form-step"><span class="num">2</span>Professional details</legend>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="Occupation" class="form-label"></label>
+                        <input asp-for="Occupation" class="form-control" placeholder="e.g. Teacher, Student, Engineer" autocomplete="organization-title" />
+                        <span asp-validation-for="Occupation" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Organization" class="form-label">Organisation / institute <span class="text-secondary fw-normal">(optional)</span></label>
+                        <input asp-for="Organization" class="form-control" autocomplete="organization" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Qualification" class="form-label">Highest qualification</label>
+                        <select asp-for="Qualification" class="form-select">
+                            <option value="">Select</option>
+                            @foreach (var q in GiveAid.Controllers.AccountController.Qualifications) { <option>@q</option> }
+                        </select>
+                        <span asp-validation-for="Qualification" class="text-danger"></span>
+                    </div>
+                    <div class="col-12">
+                        <span class="form-label d-block">Causes you care about <span class="text-secondary fw-normal">(optional)</span></span>
+                        <div class="d-flex flex-wrap gap-3">
+                            @foreach (var c in causes)
+                            {
+                                var id = "int_" + c.Replace(" ", "");
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="Interests" value="@c" id="@id" @(Model.Interests.Contains(c) ? "checked" : "") />
+                                    <label class="form-check-label" for="@id">@c</label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="mb-3">
+                <legend class="form-step"><span class="num">3</span>Password</legend>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                        <div class="form-text">At least 8 characters, with letters and a number.</div>
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="ConfirmPassword" class="form-label"></label>
+                        <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="form-check mb-3">
+                <input type="checkbox" name="AcceptTerms" id="AcceptTerms" value="true" class="form-check-input" @(Model.AcceptTerms ? "checked" : "")
+                       data-val="true" data-val-mustbetrue="You must accept the terms to register." />
+                <input type="hidden" name="AcceptTerms" value="false" />
+                <label for="AcceptTerms" class="form-check-label">I agree that Give-AID may contact me about my donations and programmes.</label>
+                <div><span asp-validation-for="AcceptTerms" class="text-danger"></span></div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-3 align-items-center">
+                <button type="submit" class="btn btn-ga btn-lg">Create account</button>
+                <span class="text-secondary">Already registered? <a asp-action="Login">Log in</a></span>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // client-side rule for the "accept terms" checkbox
+        $.validator.addMethod("mustbetrue", function (value, element) { return element.checked; });
+        $.validator.unobtrusive.adapters.addBool("mustbetrue");
+    </script>
+}

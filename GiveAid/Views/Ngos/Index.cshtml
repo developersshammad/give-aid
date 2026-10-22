@@ -1,0 +1,39 @@
+@model List<Ngo>
+@{
+    ViewData["Title"] = "Associated NGOs";
+    var areas = ViewBag.FocusAreas as List<string> ?? new();
+    string? focus = ViewBag.Focus;
+}
+<partial name="_PageHead" model="@(("Associated NGOs", (string?)"Registered organisations that run programmes with Give-AID funding."))" />
+
+<section class="section">
+    <div class="container">
+        <nav class="filter-pills mb-3" aria-label="Filter by focus area">
+            <a asp-action="Index" class="@(string.IsNullOrEmpty(focus) ? "active" : "")">All</a>
+            @foreach (var a in areas)
+            {
+                <a asp-action="Index" asp-route-focus="@a" class="@(a == focus ? "active" : "")">@a</a>
+            }
+        </nav>
+        @if (Model.Count == 0) { <p class="text-secondary">No NGOs found.</p> }
+        @foreach (var n in Model)
+        {
+            <div class="ngo-row">
+                <div class="ngo-avatar">
+                    @if (!string.IsNullOrEmpty(n.LogoPath)) { <img src="@n.LogoPath" alt="" /> }
+                    else { @string.Concat(n.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => w[0])) }
+                </div>
+                <div>
+                    <h2><a asp-action="Details" asp-route-id="@n.Id">@n.Name</a></h2>
+                    <div class="ngo-meta mb-1">
+                        <span class="tag">@n.FocusArea</span>
+                        @if (!string.IsNullOrEmpty(n.City)) { <span class="ms-2"><i class="bi bi-geo-alt"></i> @n.City</span> }
+                        @if (n.EstablishedYear.HasValue) { <span class="ms-2">Since @n.EstablishedYear</span> }
+                    </div>
+                    <p class="mb-0">@n.Description</p>
+                </div>
+                <a class="btn btn-outline-ga btn-sm" asp-action="Details" asp-route-id="@n.Id">Details</a>
+            </div>
+        }
+    </div>
+</section>

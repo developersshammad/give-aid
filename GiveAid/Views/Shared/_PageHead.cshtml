@@ -1,0 +1,18 @@
+@* Green page header used on inner pages. Model: (title, subtitle) *@
+@model (string Title, string? Subtitle)
+<section class="page-head">
+    <div class="wave-canvas" data-wave3d aria-hidden="true"></div>
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.Title</li>
+            </ol>
+        </nav>
+        <h1>@Model.Title</h1>
+        @if (!string.IsNullOrEmpty(Model.Subtitle))
+        {
+            <p class="lead">@Model.Subtitle</p>
+        }
+    </div>
+</section>

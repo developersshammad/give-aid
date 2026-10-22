@@ -1,0 +1,54 @@
+@model InviteViewModel
+@{
+    ViewData["Title"] = "Invite friends";
+    bool smtp = ViewBag.SmtpConfigured == true;
+}
+<partial name="_PageHead" model="@(("Invite friends to join", (string?)"Send a personal invitation. People are far more likely to give when a friend asks."))" />
+
+<section class="section">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-7">
+                <partial name="_Alerts" />
+                <form asp-action="Index" method="post" class="panel" novalidate>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="FriendName" class="form-label"></label>
+                            <input asp-for="FriendName" class="form-control" />
+                            <span asp-validation-for="FriendName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="FriendEmail" class="form-label"></label>
+                            <input asp-for="FriendEmail" class="form-control" type="email" />
+                            <span asp-validation-for="FriendEmail" class="text-danger"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="PersonalMessage" class="form-label"></label>
+                            <textarea asp-for="PersonalMessage" class="form-control" rows="5"></textarea>
+                            <span asp-validation-for="PersonalMessage" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-ga mt-3"><i class="bi bi-send me-1"></i>Send invitation</button>
+                    @if (!smtp)
+                    {
+                        <p class="small text-secondary mt-2 mb-0">E-mail server is not set up on this installation, so you will get a link that opens the invitation in your own e-mail app.</p>
+                    }
+                </form>
+            </div>
+            <div class="col-lg-5">
+                <h2 class="h4 mb-3">Invitations you've sent</h2>
+                @if (Model.Sent.Count == 0) { <p class="text-secondary">None yet. Your first one could bring a new donor on board.</p> }
+                <ul class="gift-list">
+                    @foreach (var i in Model.Sent)
+                    {
+                        <li>
+                            <div><div class="who">@i.FriendName</div><div class="what">@i.FriendEmail</div></div>
+                            <div class="what text-end">@i.SentAt.ToString("dd MMM yyyy")<br />@(i.EmailSent ? "E-mailed" : "Saved")</div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -1,0 +1,35 @@
+@model ProgrammeListViewModel
+@{ ViewData["Title"] = "Our programmes"; }
+<partial name="_PageHead" model="@(("Our programmes", (string?)"Education, health care, specially challenged children and more. Join an upcoming programme or see what past ones achieved."))" />
+
+<section class="section">
+    <div class="container">
+        <nav class="filter-pills mb-4" aria-label="Filter by category">
+            <a asp-action="Index" class="@(string.IsNullOrEmpty(Model.Category) ? "active" : "")">All</a>
+            @foreach (var c in Model.Categories)
+            {
+                <a asp-action="Index" asp-route-category="@c" class="@(c == Model.Category ? "active" : "")">@c</a>
+            }
+        </nav>
+
+        <h2 class="h3 mb-3">Upcoming</h2>
+        @if (Model.Upcoming.Count == 0) { <p class="text-secondary">No upcoming programmes in this category.</p> }
+        <div class="row g-3 mb-5">
+            @foreach (var p in Model.Upcoming)
+            {
+                <div class="col-md-6 col-lg-4"><partial name="_ProgrammeCard" model="p" /></div>
+            }
+        </div>
+
+        @if (Model.Past.Count > 0)
+        {
+            <h2 class="h3 mb-3">Completed</h2>
+            <div class="row g-3">
+                @foreach (var p in Model.Past)
+                {
+                    <div class="col-md-6 col-lg-4"><partial name="_ProgrammeCard" model="p" /></div>
+                }
+            </div>
+        }
+    </div>
+</section>
