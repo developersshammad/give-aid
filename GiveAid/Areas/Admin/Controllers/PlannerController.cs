@@ -182,6 +182,24 @@ namespace GiveAid.Areas.Admin.Controllers
             return RedirectToAction(nameof(Details), new { id });
         }
 
+        // POST: /Admin/Planner/Revise/5  (session id) - plan again with a change, e.g. "move to 20 December"
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Revise(int id, string? change)
+        {
+            var session = await _planner.GetSessionAsync(id);
+            if (session == null) return NotFound();
+            change = (change ?? "").Trim();
+            if (change.Length < 3 || change.Length > 300)
+            {
+                Error("Write what should change, for example \"move it to 20 December\" or \"make it 2,000 patients\" (3 to 300 characters).");
+                return RedirectToAction(nameof(Details), new { id });
+            }
+            var revised = await _planner.ReviseAsync(session, change, AdminName, HttpContext.RequestAborted);
+            if (revised.Status == "Failed") Error("The revised plan could not be finished — see the message below.");
+            else Success($"Plan #{revised.Id} made with your change. Plan #{id} is kept for comparison.");
+            return RedirectToAction(nameof(Details), new { id = revised.Id });
+        }
+
         // POST: /Admin/Planner/Cancel/5  (session id)
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(int id)

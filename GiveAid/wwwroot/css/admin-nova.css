@@ -324,3 +324,23 @@ html.nova .stat-row span { color: var(--nv-muted); }
 html.nova select, html.nova .form-select { color-scheme: dark; }
 html.nova select option, html.nova select optgroup { background-color: #0A231C; color: var(--nv-ink); }
 html.nova select option:checked { background-color: #12392D; color: #fff; }
+
+/* ---------- AI Planner: advanced parts ---------- */
+html.nova .pl-ready, html.nova .pl-revise { background: var(--nv-glass); border-color: var(--nv-line); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+html.nova .pl-revise { border-style: dashed; border-color: var(--nv-line-2); }
+html.nova .pl-gauge { --c: var(--nv-aurora); background: radial-gradient(closest-side, #0A231C 78%, transparent 80% 100%), conic-gradient(var(--c) calc(var(--v) * 1%), rgba(255, 255, 255, .08) 0); box-shadow: 0 0 40px -14px var(--c); }
+html.nova .pl-gauge.g-ok { --c: #7BE0B9; } html.nova .pl-gauge.g-warn { --c: var(--nv-lantern); } html.nova .pl-gauge.g-bad { --c: var(--nv-danger); }
+html.nova .pl-gauge b, html.nova .pl-ready-main h2, html.nova .pl-kpis b { color: #fff; }
+html.nova .pl-gauge small, html.nova .pl-kpis span, html.nova .pl-two h3, html.nova .pl-dates small, html.nova .pl-risks li small, html.nova .pl-timeline th { color: var(--nv-muted); }
+html.nova .pl-kpis > div, html.nova .pl-risks li, html.nova .pl-outreach pre { background: rgba(255, 255, 255, .04); }
+html.nova .pl-changes span { background: rgba(245, 179, 66, .14); color: var(--nv-lantern-2); }
+html.nova .pl-fund .bar { background: rgba(255, 255, 255, .08); }
+html.nova .pl-fund .bar span { background: linear-gradient(90deg, var(--nv-aurora), var(--nv-lantern)); }
+html.nova .pl-check li i { color: var(--nv-aurora); }
+html.nova .pl-dates li, html.nova .pl-outreach > div { border-color: var(--nv-line); }
+html.nova .pl-risks .lv { background: rgba(69, 224, 180, .14); color: #A8F0D7; }
+html.nova .pl-risks li { border-left-color: var(--nv-line-2); }
+html.nova .pl-risks li.lv-high { border-left-color: var(--nv-danger); } html.nova .pl-risks li.lv-high .lv { background: rgba(255, 122, 107, .16); color: #FFB3A9; }
+html.nova .pl-risks li.lv-medium { border-left-color: var(--nv-lantern); } html.nova .pl-risks li.lv-medium .lv { background: rgba(245, 179, 66, .16); color: var(--nv-lantern-2); }
+html.nova .pl-timeline th, html.nova .pl-timeline td { border-bottom-color: var(--nv-line); }
+html.nova .pl-timeline tr.ts-overdue td:first-child { color: #FF9C90; } html.nova .pl-timeline tr.ts-urgent td:first-child { color: var(--nv-lantern-2); }

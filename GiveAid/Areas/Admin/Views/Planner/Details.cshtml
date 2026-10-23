@@ -8,6 +8,12 @@
     var s = Model.Session;
     var p = Model.Programme;
     bool open = Model.Steps.Any(x => x.RequiresApproval && PlannerService.IsOpen(x));
+    var (baseGoal, changes) = PlannerService.SplitGoal(s.Goal);
+    JsonNode? Res(string tool) { var st = Model.Steps.LastOrDefault(x => x.Tool == tool); try { return st?.ResultJson != null ? JsonNode.Parse(st.ResultJson) : null; } catch { return null; } }
+    var risk = Res(PlannerToolbox.ToolRisks);
+    var fund = Res(PlannerToolbox.ToolFunding);
+    var logi = Res(PlannerToolbox.ToolLogistics);
+    var goalR = Res(PlannerService.ToolGoal);
 }
 @functions {
     static JsonNode? J(string? json) { try { return string.IsNullOrEmpty(json) ? null : JsonNode.Parse(json); } catch { return null; } }
@@ -19,18 +25,23 @@
 
 <!-- ===== Goal + status ===== -->
 <section class="pl-head">
-    <div class="pl-goal-quote"><i class="bi bi-quote"></i>@s.Goal</div>
+    <div class="pl-goal-quote"><i class="bi bi-quote"></i>@baseGoal</div>
+    @if (changes.Count > 0)
+    {
+        <div class="pl-changes">@foreach (var c in changes) { <span><i class="bi bi-arrow-repeat"></i>@c</span> }</div>
+    }
     <div class="pl-meta">
         <partial name="_Status" model="s.Status" />
         <span class="pl-mode pl-mode-@s.Mode.ToLower()"><i class="bi bi-@(s.Mode == "Demo" ? "cpu" : "stars")"></i>@(s.Mode == "Demo" ? "Demo mode" : s.Mode + " AI")</span>
         <span class="text-secondary small">by @s.CreatedBy · @s.CreatedAt.ToString("dd MMM yyyy, HH:mm")</span>
-        <span class="ms-auto d-flex gap-2">
+        <span class="ms-auto d-flex gap-2 no-print">
             @if (open)
             {
                 <form asp-action="Cancel" asp-route-id="@s.Id" method="post" data-confirm="Cancel this plan? Proposals still waiting will be rejected.">
                     <button class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg me-1"></i>Cancel plan</button>
                 </form>
             }
+            <button type="button" class="btn btn-sm btn-outline-ga" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print plan</button>
             <a class="btn btn-sm btn-outline-ga" asp-action="Index"><i class="bi bi-plus-lg me-1"></i>New plan</a>
         </span>
     </div>
@@ -46,6 +57,42 @@
             <p class="small mb-0">Tip: check the API key and model in appsettings.json, or set <code>"Provider": "Demo"</code> to plan without AI.</p>
         }
     </div>
+}
+
+<!-- ===== Readiness at a glance ===== -->
+@if (risk != null)
+{
+    int score = risk["readiness"]?.GetValue<int>() ?? 0;
+    string tone = score >= 80 ? "good" : score >= 60 ? "ok" : score >= 40 ? "warn" : "bad";
+    <section class="pl-ready">
+        <div class="pl-gauge g-@tone" style="--v:@score" role="img" aria-label="Readiness @score out of 100"><b>@score</b><small>/100</small></div>
+        <div class="pl-ready-main">
+            <h2>@Str(risk, "verdict")</h2>
+            <div class="pl-kpis">
+                @if (fund?["budget"] is JsonNode fb && fb.GetValueKind() == JsonValueKind.Number) { <div><span>Budget</span><b>@Money(fb)</b></div> }
+                @if (fund?["covered_percent"] is JsonNode cp) { <div><span>Funded</span><b>@cp%</b></div> }
+                @if (logi?["volunteers_needed"] is JsonNode vn) { <div><span>Volunteers</span><b>@vn needed</b></div> }
+                @if (Str(goalR, "start_date") is string sd && DateTime.TryParse(sd, CultureInfo.InvariantCulture, DateTimeStyles.None, out var sdt)) { <div><span>Starts in</span><b>@Math.Max(0, (sdt.Date - DateTime.Today).Days) days</b></div> }
+            </div>
+            @if (risk["risks"] is JsonArray top && top.Count > 0)
+            {
+                <ul class="pl-risks compact">@foreach (var rk in top.Take(3)) { <li class="lv-@Str(rk, "level")"><span class="lv">@Str(rk, "level")</span><b>@Str(rk, "risk")</b></li> }</ul>
+            }
+        </div>
+    </section>
+}
+
+<!-- ===== Revise the plan ===== -->
+@if (s.Status != "Planning")
+{
+    <form asp-action="Revise" asp-route-id="@s.Id" method="post" class="pl-revise no-print">
+        <label for="change" class="form-label mb-1"><i class="bi bi-arrow-repeat me-1"></i><b>Change something and plan again</b></label>
+        <div class="d-flex flex-wrap gap-2">
+            <input id="change" name="change" class="form-control" maxlength="300" required placeholder="e.g. move it to 20 December · make it 2,000 patients · in Hyderabad instead" />
+            <button class="btn btn-ga"><i class="bi bi-stars me-1"></i>Revise plan</button>
+        </div>
+        <small class="text-secondary">A new plan is made with your change; this one is kept for comparison.</small>
+    </form>
 }
 
 <!-- ===== The draft programme, once approved ===== -->
@@ -163,6 +210,107 @@
                         }
                         break;
 
+                    case PlannerToolbox.ToolFunding:
+                        if (r?["covered_percent"] is JsonNode cov)
+                        {
+                            int pct = cov.GetValue<int>();
+                            <div class="pl-fund"><div class="bar"><span style="width:@pct%"></span></div><b>@pct% funded</b></div>
+                        }
+                        <dl class="pl-facts">
+                            <div><dt>Raised for @string.Join(" + ", (r?["causes"] as JsonArray ?? new JsonArray()).Select(x => x?.ToString()))</dt><dd>@Money(r?["raised"])</dd></div>
+                            <div><dt>Promised to other programmes</dt><dd>@Money(r?["committed"])</dd></div>
+                            <div><dt>Available</dt><dd>@Money(r?["available"])</dd></div>
+                            @if (r?["gap"] is JsonNode gp && gp.GetValue<decimal>() > 0)
+                            {
+                                <div><dt>Short by</dt><dd class="text-danger">@Money(gp)</dd></div>
+                                <div><dt>Suggested appeal</dt><dd>@Money(r["suggested_appeal_target"])</dd></div>
+                            }
+                        </dl>
+                        break;
+
+                    case PlannerToolbox.ToolLogistics:
+                        if (r?["people_per_day"] != null)
+                        {
+                            <dl class="pl-facts">
+                                <div><dt>Days</dt><dd>@Str(r, "days")</dd></div>
+                                <div><dt>People a day</dt><dd>@Str(r, "people_per_day")</dd></div>
+                                <div><dt>Shifts</dt><dd>@Str(r, "shifts")</dd></div>
+                                <div><dt>Volunteers</dt><dd>@Str(r, "volunteers_needed") needed · @Str(r, "volunteers_found") found</dd></div>
+                            </dl>
+                            <div class="pl-two mt-2">
+                                <div><h3>Specialist staff</h3><ul class="pl-plain">@foreach (var st in r["staff"] as JsonArray ?? new JsonArray()) { <li><b>@Str(st, "needed")</b> × @Str(st, "role")</li> }</ul></div>
+                                <div><h3>Supplies checklist</h3><ul class="pl-check">@foreach (var su in r["supplies"] as JsonArray ?? new JsonArray()) { <li><i class="bi bi-square"></i>@su</li> }</ul></div>
+                            </div>
+                            <p class="small text-secondary mb-0 mt-1">Rule: @Str(r, "rule")</p>
+                        }
+                        break;
+
+                    case PlannerToolbox.ToolDates:
+                        if (r?["options"] is JsonArray opts && opts.Count > 0)
+                        {
+                            <ul class="pl-dates">
+                                @foreach (var o in opts)
+                                {
+                                    <li><b>@Str(o, "label")</b><small>@Str(o, "lead_days") days to prepare</small>
+                                        @if (step == Model.Steps.Last(x => x.Tool == PlannerToolbox.ToolDates) && s.Status != "Planning")
+                                        {
+                                            <form asp-action="Revise" asp-route-id="@s.Id" method="post" class="no-print">
+                                                @{ var os1 = DateTime.Parse(Str(o, "start_date")!, CultureInfo.InvariantCulture); var oe1 = DateTime.Parse(Str(o, "end_date")!, CultureInfo.InvariantCulture); }
+                                                <input type="hidden" name="change" value="@(os1 == oe1 ? $"on {os1:d MMMM}" : os1.Month == oe1.Month ? $"{os1.Day}-{oe1.Day} {oe1:MMMM}" : $"from {os1:d MMMM} to {oe1:d MMMM}")" />
+                                                <button class="btn btn-sm btn-outline-ga">Use these dates</button>
+                                            </form>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        break;
+
+                    case PlannerToolbox.ToolRisks:
+                        if (r?["risks"] is JsonArray rl)
+                        {
+                            if (rl.Count == 0) { <p class="mb-0"><i class="bi bi-shield-check me-1"></i>No risks found.</p> }
+                            <ul class="pl-risks">
+                                @foreach (var rk in rl)
+                                {
+                                    <li class="lv-@Str(rk, "level")"><span class="lv">@Str(rk, "level")</span><div><b>@Str(rk, "area"): @Str(rk, "risk")</b><small><i class="bi bi-wrench-adjustable"></i> @Str(rk, "fix")</small></div></li>
+                                }
+                            </ul>
+                        }
+                        break;
+
+                    case PlannerToolbox.ToolTimeline:
+                        if (r?["tasks"] is JsonArray tl)
+                        {
+                            <table class="pl-timeline">
+                                <thead><tr><th>Due</th><th>Task</th><th>Who</th></tr></thead>
+                                <tbody>
+                                    @foreach (var t in tl)
+                                    {
+                                        <tr class="ts-@Str(t, "state")"><td>@Day(Str(t, "due_date"))@if (Str(t, "state") is "overdue" or "urgent") { <span class="pl-tag">@(Str(t, "state") == "overdue" ? "late" : "soon")</span> }</td><td>@Str(t, "task")</td><td>@Str(t, "owner")</td></tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        break;
+
+                    case PlannerToolbox.ToolOutreach:
+                        if (r != null)
+                        {
+                            var blocks = new[] { ("whatsapp_english", "WhatsApp – English", "whatsapp"), ("whatsapp_roman_urdu", "WhatsApp – Roman Urdu", "whatsapp"), ("sms", "SMS (160 characters)", "phone"), ("social_post", "Social media post", "megaphone") };
+                            <div class="pl-outreach">
+                                @foreach (var (key, label, icon) in blocks)
+                                {
+                                    if (Str(r, key) is string txt)
+                                    {
+                                        <div><div class="h"><span><i class="bi bi-@icon"></i>@label</span><button type="button" class="btn btn-sm btn-outline-ga no-print" data-copy="out-@step.Id-@key"><i class="bi bi-clipboard"></i> Copy</button></div>
+                                            <pre id="out-@step.Id-@key">@txt</pre></div>
+                                    }
+                                }
+                            </div>
+                        }
+                        break;
+
                     case PlannerService.ToolDraft:
                     {
                         var d = PlannerService.Read<DraftProposal>(step)!;
@@ -266,4 +414,17 @@
 @if (Model.Steps.Count == 0)
 {
     <div class="panel text-secondary">No steps were recorded.</div>
+}
+
+@section Scripts {
+    <script>
+        // copy buttons of the outreach kit
+        document.addEventListener("click", function (e) {
+            var b = e.target.closest("[data-copy]"); if (!b) return;
+            var el = document.getElementById(b.getAttribute("data-copy")); if (!el) return;
+            var done = function () { var t = b.innerHTML; b.innerHTML = '<i class="bi bi-check2"></i> Copied'; setTimeout(function () { b.innerHTML = t; }, 1500); };
+            if (navigator.clipboard) navigator.clipboard.writeText(el.textContent).then(done, function () {});
+            else { var r = document.createRange(); r.selectNodeContents(el); var s = getSelection(); s.removeAllRanges(); s.addRange(r); document.execCommand("copy"); done(); }
+        });
+    </script>
 }

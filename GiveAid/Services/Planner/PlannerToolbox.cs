@@ -60,7 +60,7 @@ namespace GiveAid.Services.Planner
     /// directly: it can call these read-only tools, and it can PROPOSE a draft programme or
     /// volunteer invitations, which are validated here and wait for an admin's approval.
     /// </summary>
-    public class PlannerToolbox
+    public partial class PlannerToolbox
     {
         public static readonly JsonSerializerOptions Json = new()
         {

@@ -30,8 +30,44 @@ namespace GiveAid.Services.Planner
         {
             [ToolGoal] = "Understood the goal", [ToolNgos] = "Picked the NGO", [ToolCalendar] = "Checked the calendar",
             [ToolWeather] = "Checked the weather", [ToolVolunteers] = "Found volunteers", [ToolBudget] = "Estimated the budget",
-            [ToolDraft] = "Draft programme page", [ToolInvites] = "Invite volunteers"
+            [ToolDraft] = "Draft programme page", [ToolInvites] = "Invite volunteers",
+            [PlannerToolbox.ToolFunding] = "Checked the money", [PlannerToolbox.ToolLogistics] = "Planned people and supplies",
+            [PlannerToolbox.ToolDates] = "Found better dates", [PlannerToolbox.ToolRisks] = "Risks and readiness",
+            [PlannerToolbox.ToolTimeline] = "Built the timeline", [PlannerToolbox.ToolOutreach] = "Wrote the outreach messages"
         };
+
+        /// <summary>Separates a revised goal into the original goal and the admin's changes ("Change: ..." lines).</summary>
+        public static (string Goal, List<string> Changes) SplitGoal(string goal)
+        {
+            var parts = goal.Split("\nChange: ");
+            return (parts[0].Trim(), parts.Skip(1).Select(x => x.Trim()).Where(x => x.Length > 0).ToList());
+        }
+
+        /// <summary>Parses the goal, then applies each change the admin asked for (only what the change really mentions).</summary>
+        public static GoalSpec ParseWithChanges(string goal, DateTime today)
+        {
+            var (baseGoal, changes) = SplitGoal(goal);
+            var spec = GoalParser.Parse(baseGoal, today);
+            foreach (var change in changes)
+            {
+                var c = GoalParser.Parse(change, today);
+                bool Has(string word) => c.Assumptions.Any(a => a.Contains(word, StringComparison.OrdinalIgnoreCase));
+                if (!Has("how many people")) { spec.People = c.People; spec.Audience = c.Audience; spec.Assumptions.RemoveAll(a => a.Contains("how many people")); }
+                if (!Has("No place")) { spec.Place = c.Place; spec.Language = c.Language ?? spec.Language; spec.Assumptions.RemoveAll(a => a.Contains("No place")); }
+                if (!Has("No date"))
+                {
+                    var len = (spec.EndDate - spec.StartDate).Days;
+                    spec.StartDate = c.StartDate;
+                    spec.EndDate = c.EndDate > c.StartDate ? c.EndDate : c.StartDate.AddDays(len);
+                    spec.Assumptions.RemoveAll(a => a.Contains("No date") || a.Contains("Only the month"));
+                    spec.Assumptions.AddRange(c.Assumptions.Where(a => a.Contains("Only the month")));
+                }
+                // only switch the kind of programme when the change names a real activity ("eye camp", "blankets"...)
+                if (!Has("category") && c.Activity != c.Category + " Programme") { spec.Category = c.Category; spec.Activity = c.Activity; }
+                spec.Title = spec.Place != null ? $"{spec.Activity} - {spec.Place}" : spec.Activity;
+            }
+            return spec;
+        }
 
         private readonly GiveAidContext _db;
         private readonly PlannerToolbox _tools;
@@ -125,13 +161,18 @@ namespace GiveAid.Services.Planner
         // ----------------------------------------------------------------
         private async Task RunDemoAsync(PlannerSession session, CancellationToken ct)
         {
-            var spec = GoalParser.Parse(session.Goal, DateTime.Today);
+            var spec = ParseWithChanges(session.Goal, DateTime.Today);
             int order = 0;
 
             string dates = GoalParser.FormatDates(spec.StartDate, spec.EndDate);
             await AddStepAsync(session, ++order, ToolGoal, new { goal = session.Goal }, new ToolOutcome
             {
-                Data = spec,
+                Data = new
+                {
+                    title = spec.Title, category = spec.Category, place = spec.Place, start_date = spec.StartDate.ToString("yyyy-MM-dd"),
+                    end_date = spec.EndDate.ToString("yyyy-MM-dd"), people = spec.People, audience = spec.Audience, language = spec.Language,
+                    assumptions = spec.Assumptions, changes = SplitGoal(session.Goal).Changes
+                },
                 Summary = $"{spec.Title}: {spec.Category}, {spec.Place ?? "place unknown"}, {dates}, " +
                           (spec.People.HasValue ? $"{spec.People:#,##0} {spec.Audience}." : "number of people unknown.") +
                           (spec.Assumptions.Count > 0 ? " Assumed: " + string.Join(" ", spec.Assumptions) : ""),
@@ -145,13 +186,20 @@ namespace GiveAid.Services.Planner
             int? ngoId = top != null && top["score"]!.GetValue<int>() > 0 ? top["ngo_id"]!.GetValue<int>() : null;
             string? ngoName = ngoId != null ? top!["name"]!.GetValue<string>() : null;
 
+            var calendar = await _tools.CheckCalendarAsync(spec.StartDate, spec.EndDate, ngoId, spec.Place);
             await AddStepAsync(session, ++order, ToolCalendar,
-                new { start_date = spec.StartDate.ToString("yyyy-MM-dd"), end_date = spec.EndDate.ToString("yyyy-MM-dd"), ngo_id = ngoId, place = spec.Place },
-                await _tools.CheckCalendarAsync(spec.StartDate, spec.EndDate, ngoId, spec.Place));
+                new { start_date = spec.StartDate.ToString("yyyy-MM-dd"), end_date = spec.EndDate.ToString("yyyy-MM-dd"), ngo_id = ngoId, place = spec.Place }, calendar);
 
+            var weather = await _tools.GetWeatherAsync(spec.Place, spec.StartDate, spec.EndDate, ct);
             await AddStepAsync(session, ++order, ToolWeather,
-                new { place = spec.Place, start_date = spec.StartDate.ToString("yyyy-MM-dd"), end_date = spec.EndDate.ToString("yyyy-MM-dd") },
-                await _tools.GetWeatherAsync(spec.Place, spec.StartDate, spec.EndDate, ct));
+                new { place = spec.Place, start_date = spec.StartDate.ToString("yyyy-MM-dd"), end_date = spec.EndDate.ToString("yyyy-MM-dd") }, weather);
+
+            // dates clash or bad weather -> look for free windows (the admin decides whether to move)
+            bool badWeather = weather.Ok && weather.NeedsReview;
+            if (calendar.NeedsReview || badWeather || (spec.StartDate - DateTime.Today).Days < 14)
+                await AddStepAsync(session, ++order, PlannerToolbox.ToolDates,
+                    new { start_date = spec.StartDate.ToString("yyyy-MM-dd"), end_date = spec.EndDate.ToString("yyyy-MM-dd"), ngo_id = ngoId, place = spec.Place },
+                    await _tools.SuggestDatesAsync(spec.StartDate, spec.EndDate, ngoId, spec.Place));
 
             var volunteers = await _tools.FindVolunteersAsync(spec.Category, spec.Place, spec.Language);
             await AddStepAsync(session, ++order, ToolVolunteers, new { category = spec.Category, place = spec.Place, language = spec.Language }, volunteers);
@@ -160,6 +208,26 @@ namespace GiveAid.Services.Planner
             await AddStepAsync(session, ++order, ToolBudget, new { category = spec.Category, people = spec.People }, budget);
             var lines = JsonSerializer.Deserialize<List<BudgetLine>>(
                 (JsonSerializer.SerializeToNode(budget.Data, PlannerToolbox.Json)?["lines"])?.ToJsonString() ?? "[]", PlannerToolbox.Json) ?? new();
+            decimal? total = lines.Count > 0 ? lines.Sum(l => l.Amount) : null;
+
+            // ---------- advanced checks ----------
+            var funding = await _tools.CheckFundingAsync(spec.Category, total);
+            await AddStepAsync(session, ++order, PlannerToolbox.ToolFunding, new { category = spec.Category, budget = total }, funding);
+
+            int found = (JsonSerializer.SerializeToNode(volunteers.Data, PlannerToolbox.Json)?["volunteers"] as JsonArray)?.Count(v => v!["score"]!.GetValue<int>() > 0) ?? 0;
+            await AddStepAsync(session, ++order, PlannerToolbox.ToolLogistics,
+                new { category = spec.Category, people = spec.People, start_date = spec.StartDate.ToString("yyyy-MM-dd"), end_date = spec.EndDate.ToString("yyyy-MM-dd") },
+                await _tools.PlanLogisticsAsync(spec.Category, spec.People, spec.StartDate, spec.EndDate, found));
+
+            await AddStepAsync(session, ++order, PlannerToolbox.ToolRisks, new { }, _tools.AssessRisks(await GetStepsAsync(session.Id), spec.StartDate));
+
+            bool needsAppeal = JsonSerializer.SerializeToNode(funding.Data, PlannerToolbox.Json)?["gap"]?.GetValue<decimal>() > 0;
+            await AddStepAsync(session, ++order, PlannerToolbox.ToolTimeline,
+                new { start_date = spec.StartDate.ToString("yyyy-MM-dd"), end_date = spec.EndDate.ToString("yyyy-MM-dd"), needs_appeal = needsAppeal },
+                _tools.BuildTimeline(spec.StartDate, spec.EndDate, needsAppeal));
+
+            await AddStepAsync(session, ++order, PlannerToolbox.ToolOutreach, new { title = spec.Title },
+                PlannerToolbox.WriteOutreach(spec.Title, spec.Place, spec.StartDate, spec.EndDate, spec.People, spec.Audience, spec.Language));
 
             // ---------- proposals (wait for the admin) ----------
             var draft = new DraftProposal
@@ -308,6 +376,34 @@ namespace GiveAid.Services.Planner
                 case ToolBudget:
                     outcome = await _tools.EstimateBudgetAsync(S("category"), I("people"));
                     break;
+                case PlannerToolbox.ToolFunding:
+                    outcome = await _tools.CheckFundingAsync(S("category"), args["budget"] is JsonValue bv && bv.TryGetValue<decimal>(out var bdec) ? bdec : I("budget"));
+                    break;
+                case PlannerToolbox.ToolLogistics:
+                {
+                    if (D("start_date") is not DateTime ls) return ("start_date must be YYYY-MM-DD", true);
+                    var vstep = (await GetStepsAsync(session.Id)).LastOrDefault(x => x.Tool == ToolVolunteers);
+                    int vfound = 0;
+                    try { vfound = (JsonNode.Parse(vstep?.ResultJson ?? "{}")?["volunteers"] as JsonArray)?.Count ?? 0; } catch (JsonException) { }
+                    outcome = await _tools.PlanLogisticsAsync(S("category"), I("people"), ls, D("end_date") ?? ls, vfound);
+                    break;
+                }
+                case PlannerToolbox.ToolDates:
+                    if (D("start_date") is not DateTime ds) return ("start_date must be YYYY-MM-DD", true);
+                    outcome = await _tools.SuggestDatesAsync(ds, D("end_date") ?? ds, I("ngo_id"), S("place"));
+                    break;
+                case PlannerToolbox.ToolRisks:
+                    if (D("start_date") is not DateTime rs) return ("start_date must be YYYY-MM-DD", true);
+                    outcome = _tools.AssessRisks(await GetStepsAsync(session.Id), rs);
+                    break;
+                case PlannerToolbox.ToolTimeline:
+                    if (D("start_date") is not DateTime ts) return ("start_date must be YYYY-MM-DD", true);
+                    outcome = _tools.BuildTimeline(ts, D("end_date") ?? ts, args["needs_appeal"]?.GetValue<bool>() == true);
+                    break;
+                case PlannerToolbox.ToolOutreach:
+                    if (D("start_date") is not DateTime os) return ("start_date must be YYYY-MM-DD", true);
+                    outcome = PlannerToolbox.WriteOutreach(S("title") ?? "Give-AID programme", S("place"), os, D("end_date") ?? os, I("people"), S("audience") ?? "people", S("language"));
+                    break;
                 case ToolDraft:
                 {
                     DraftProposal? d;
@@ -345,8 +441,9 @@ namespace GiveAid.Services.Planner
         private static string SystemPrompt() => $@"You are the Give-AID Programme Planner, an assistant inside the admin panel of Give-AID, a Pakistani charity that works through associated NGOs. An admin has typed a goal for a new programme. Plan it with the tools.
 
 How to work:
-1. First call record_goal with what you understood. Resolve relative dates from today's date; dates are YYYY-MM-DD and must not be in the past. List anything you had to guess in assumptions.
+1. First call record_goal with what you understood. Lines starting with 'Change:' are later corrections from the admin and override the original goal. Resolve relative dates from today's date; dates are YYYY-MM-DD and must not be in the past. List anything you had to guess in assumptions.
 2. Gather facts with the read tools: find_ngos, check_calendar, get_weather, find_volunteers, estimate_budget. They read the real database. Call each at most twice.
+   Then call check_funding (with the budget total), plan_logistics, suggest_dates (when the dates clash, the weather is bad or there are fewer than 14 days to prepare), assess_risks (after all the checks above), build_timeline and write_outreach.
 3. Then call propose_draft_programme exactly once, and propose_volunteer_invites if suitable volunteers were found. These do NOT take effect: they are queued for an admin to approve, edit or reject.
 4. Finish with a short plain-text summary (under 120 words) of the plan and what the admin should check.
 
@@ -383,6 +480,19 @@ Rules:
                     ""category"":{{""type"":""string"",""enum"":[{cats}]}},""place"":{{""type"":""string""}},""language"":{{""type"":""string""}}}}}}")),
                 new(ToolBudget, "Estimate the budget from real past programme spending, scaled to the number of people.", O($@"{{""type"":""object"",""properties"":{{
                     ""category"":{{""type"":""string"",""enum"":[{cats}]}},""people"":{{""type"":""integer""}}}},""required"":[""category"",""people""]}}")),
+                new(PlannerToolbox.ToolFunding, "Compare the budget with money raised for the matching donation cause, minus what other upcoming programmes already need.", O($@"{{""type"":""object"",""properties"":{{
+                    ""category"":{{""type"":""string"",""enum"":[{cats}]}},""budget"":{{""type"":""number"",""description"":""Total from estimate_budget""}}}},""required"":[""category""]}}")),
+                new(PlannerToolbox.ToolLogistics, "Volunteers, specialist staff, shifts and supplies needed for the number of people and days.", O($@"{{""type"":""object"",""properties"":{{
+                    ""category"":{{""type"":""string"",""enum"":[{cats}]}},""people"":{{""type"":""integer""}},""start_date"":{{""type"":""string""}},""end_date"":{{""type"":""string""}}}},""required"":[""category"",""people"",""start_date""]}}")),
+                new(PlannerToolbox.ToolDates, "Find up to 3 free date windows of the same length in the next 8 weeks.", O(@"{""type"":""object"",""properties"":{
+                    ""start_date"":{""type"":""string""},""end_date"":{""type"":""string""},""ngo_id"":{""type"":""integer""},""place"":{""type"":""string""}},""required"":[""start_date""]}")),
+                new(PlannerToolbox.ToolRisks, "Collect every risk found by the earlier steps of this plan, with a fix for each and a 0-100 readiness score. Call it after the other checks.", O(@"{""type"":""object"",""properties"":{
+                    ""start_date"":{""type"":""string""}},""required"":[""start_date""]}")),
+                new(PlannerToolbox.ToolTimeline, "Task list with due dates counting back from the start date.", O(@"{""type"":""object"",""properties"":{
+                    ""start_date"":{""type"":""string""},""end_date"":{""type"":""string""},""needs_appeal"":{""type"":""boolean""}},""required"":[""start_date""]}")),
+                new(PlannerToolbox.ToolOutreach, "Ready-to-copy WhatsApp (English and Roman Urdu), SMS and social-media texts.", O(@"{""type"":""object"",""properties"":{
+                    ""title"":{""type"":""string""},""place"":{""type"":""string""},""start_date"":{""type"":""string""},""end_date"":{""type"":""string""},
+                    ""people"":{""type"":""integer""},""audience"":{""type"":""string""},""language"":{""type"":""string""}},""required"":[""title"",""start_date""]}")),
                 new(ToolDraft, "PROPOSE the new programme as a hidden draft. Queued for admin approval; nothing is created until then.", O($@"{{""type"":""object"",""properties"":{{
                     ""title"":{{""type"":""string""}},""category"":{{""type"":""string"",""enum"":[{cats}]}},""ngo_id"":{{""type"":""integer""}},
                     ""venue"":{{""type"":""string""}},""start_date"":{{""type"":""string"",""description"":""YYYY-MM-DD""}},""end_date"":{{""type"":""string"",""description"":""YYYY-MM-DD""}},
@@ -535,6 +645,14 @@ Rules:
             programme.IsPublished = true;
             await _db.SaveChangesAsync();
             return $"\"{programme.Title}\" is now live on the website.";
+        }
+
+        /// <summary>Plans the same goal again with the admin's change, as a new plan (the old one is kept).</summary>
+        public Task<PlannerSession> ReviseAsync(PlannerSession session, string change, string admin, CancellationToken ct)
+        {
+            var goal = session.Goal.Trim() + "\nChange: " + change.Trim();
+            if (goal.Length > 1000) goal = goal[..1000];      // the Goal column holds 1000 characters
+            return PlanAsync(goal, admin, ct);
         }
 
         public async Task CancelAsync(PlannerSession session, string admin)

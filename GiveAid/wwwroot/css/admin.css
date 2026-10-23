@@ -309,3 +309,67 @@ a.kpi:hover { border-color: #1E6B52; box-shadow: 0 12px 26px -18px rgba(15,69,53
 .pl-raw pre { background: #F6F8F7; border-radius: .5rem; padding: .65rem; max-height: 18rem; overflow: auto; font-size: .78rem; margin: .4rem 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 @media (prefers-reduced-motion: reduce) { .pl-spinner { animation-duration: 3s; } .pl-busy-card li { transition: none; } }
+
+/* =====================================================================
+   AI Planner - advanced parts: readiness, funding, logistics, risks,
+   timeline, outreach kit, revise box, print
+   ===================================================================== */
+.pl-changes { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .5rem; }
+.pl-changes span { display: inline-flex; gap: .35rem; align-items: center; font-size: .85rem; padding: .2rem .6rem; border-radius: 999px; background: #FFF1D6; color: #7A4F00; }
+.pl-ready { display: flex; gap: 1.5rem; align-items: center; background: #fff; border: 1px solid #DCE7E1; border-radius: .9rem; padding: 1.1rem 1.25rem; margin-bottom: 1rem; }
+.pl-gauge { --v: 0; --c: #1E6B52; flex: none; width: 7.5rem; height: 7.5rem; border-radius: 50%; display: grid; place-content: center; text-align: center;
+    background: radial-gradient(closest-side, #fff 78%, transparent 80% 100%), conic-gradient(var(--c) calc(var(--v) * 1%), #E4EEE8 0); }
+.pl-gauge b { font-size: 2.1rem; line-height: 1; font-family: var(--ga-font-display, inherit); color: #0F4535; }
+.pl-gauge small { color: #56665F; }
+.pl-gauge.g-ok { --c: #3C9A6E; } .pl-gauge.g-warn { --c: #E09A22; } .pl-gauge.g-bad { --c: #B3261E; }
+.pl-ready-main { flex: 1; min-width: 0; }
+.pl-ready-main h2 { font-size: 1.35rem; margin: 0 0 .6rem; }
+.pl-kpis { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: .6rem; }
+.pl-kpis > div { background: #F4F9F6; border-radius: .55rem; padding: .4rem .75rem; }
+.pl-kpis span { display: block; font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: #56665F; font-weight: 700; }
+.pl-kpis b { color: #17231F; }
+.pl-revise { background: #fff; border: 1px dashed #B9CCC1; border-radius: .8rem; padding: .9rem 1rem; margin-bottom: 1rem; }
+.pl-revise .form-control { flex: 1 1 18rem; }
+.pl-fund { display: flex; gap: .8rem; align-items: center; margin: .2rem 0 .7rem; }
+.pl-fund .bar { flex: 1; height: .65rem; border-radius: 999px; background: #E4EEE8; overflow: hidden; }
+.pl-fund .bar span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #1E6B52, #F2A93B); }
+.pl-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; }
+.pl-two h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; color: #56665F; margin: 0 0 .35rem; }
+.pl-plain, .pl-check { list-style: none; padding: 0; margin: 0; }
+.pl-plain li, .pl-check li { padding: .2rem 0; }
+.pl-check li i { margin-right: .45rem; color: #1E6B52; }
+.pl-dates { list-style: none; padding: 0; margin: 0; display: grid; gap: .5rem; }
+.pl-dates li { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; padding: .55rem .75rem; border: 1px solid #DCE7E1; border-radius: .6rem; }
+.pl-dates small { color: #56665F; margin-right: auto; }
+.pl-risks { list-style: none; padding: 0; margin: 0; display: grid; gap: .45rem; }
+.pl-risks li { display: flex; gap: .7rem; align-items: flex-start; padding: .55rem .7rem; border-radius: .6rem; background: #F7FAF8; border-left: 4px solid #B9CCC1; }
+.pl-risks li small { display: block; color: #56665F; margin-top: .15rem; }
+.pl-risks .lv { flex: none; font-size: .66rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; padding: .15rem .45rem; border-radius: .35rem; background: #E4EEE8; color: #0F4535; margin-top: .1rem; }
+.pl-risks li.lv-high { border-left-color: #B3261E; } .pl-risks li.lv-high .lv { background: #FBE1DE; color: #8F1D17; }
+.pl-risks li.lv-medium { border-left-color: #E09A22; } .pl-risks li.lv-medium .lv { background: #FFF1D6; color: #7A4F00; }
+.pl-risks.compact li { padding: .35rem .6rem; }
+.pl-timeline { width: 100%; border-collapse: collapse; font-size: .93rem; }
+.pl-timeline th { text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: #56665F; padding: .35rem .5rem; border-bottom: 1px solid #DCE7E1; }
+.pl-timeline td { padding: .45rem .5rem; border-bottom: 1px solid #EEF3F0; vertical-align: top; }
+.pl-timeline td:first-child { white-space: nowrap; font-weight: 600; }
+.pl-timeline tr.ts-overdue td:first-child { color: #B3261E; } .pl-timeline tr.ts-urgent td:first-child { color: #A36A00; }
+.pl-timeline .pl-tag { margin-left: .4rem; }
+.pl-outreach { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: .75rem; }
+.pl-outreach > div { border: 1px solid #DCE7E1; border-radius: .7rem; padding: .6rem .7rem; }
+.pl-outreach .h { display: flex; justify-content: space-between; align-items: center; gap: .5rem; margin-bottom: .4rem; font-weight: 700; }
+.pl-outreach .h i { margin-right: .35rem; }
+.pl-outreach pre { white-space: pre-wrap; font-family: inherit; font-size: .9rem; margin: 0; background: #F7FAF8; border-radius: .5rem; padding: .55rem .65rem; }
+@media (max-width: 575.98px) { .pl-ready { flex-direction: column; align-items: flex-start; } }
+
+@media print {
+    .admin-side-wrap, .admin-top, .no-print, .pl-actions, .pl-reject, .pl-raw, .nova-space, .cmdk, .admin-hud { display: none !important; }
+    body.admin, html.nova body.admin { background: #fff !important; color: #000 !important; }
+    .admin-main, .admin-content { margin: 0 !important; padding: 0 !important; }
+    .pl-card, .pl-ready, .pl-head { break-inside: avoid; box-shadow: none !important; }
+}
+@media print {
+    .admin-content *, html.nova .admin-content * { color: #111 !important; background-color: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; text-shadow: none !important; }
+    .pl-card, .pl-ready, .pl-head, .pl-summary, .pl-facts > div, .pl-risks li, .pl-outreach > div { border: 1px solid #ccc !important; }
+    .pl-gauge, html.nova .pl-gauge { background: radial-gradient(closest-side, #fff 78%, transparent 80% 100%), conic-gradient(#333 calc(var(--v) * 1%), #ddd 0) !important; box-shadow: none !important; }
+    .pl-steps::before, .admin-content .alert { display: none !important; }
+}
