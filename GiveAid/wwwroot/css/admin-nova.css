@@ -312,3 +312,15 @@ html.nova .login-status .dot { background: var(--nv-aurora); }
     html.nova .panel, html.nova .dash-card, html.nova .table-wrap, html.nova .kpi, html.nova .pl-card { background: rgba(8, 30, 24, .96); }
 }
 .cmdk-search input:focus-visible { outline: none; }
+
+/* ---------- summary strip (Donations page) ---------- */
+html.nova .stat-row { background: var(--nv-glass); border: 1px solid var(--nv-line); box-shadow: 0 24px 60px -34px rgba(0, 0, 0, .95), inset 0 1px 0 rgba(255, 255, 255, .04); backdrop-filter: blur(12px) saturate(130%); -webkit-backdrop-filter: blur(12px) saturate(130%); }
+html.nova .stat-row div + div { border-left-color: var(--nv-line); }
+html.nova .stat-row div:nth-child(n+3) { border-top-color: var(--nv-line); }
+html.nova .stat-row b { color: var(--nv-lantern); }
+html.nova .stat-row span { color: var(--nv-muted); }
+
+/* ---------- dropdown lists (the list that opens under a select) ---------- */
+html.nova select, html.nova .form-select { color-scheme: dark; }
+html.nova select option, html.nova select optgroup { background-color: #0A231C; color: var(--nv-ink); }
+html.nova select option:checked { background-color: #12392D; color: #fff; }

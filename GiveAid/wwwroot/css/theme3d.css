@@ -549,3 +549,8 @@ dl dt { color: var(--muted); font-weight: 600; }
     ::view-transition-old(root), ::view-transition-new(root) { animation: none !important; }
 }
 code { color: var(--marigold); }
+
+/* ---------- dropdown lists (the list that opens under a select) ---------- */
+select, .form-select { color-scheme: dark; }
+select option, select optgroup { background-color: var(--night-2); color: var(--text); }
+select option:checked { background-color: var(--night-3); color: #fff; }
