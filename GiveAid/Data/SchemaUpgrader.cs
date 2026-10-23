@@ -74,6 +74,25 @@ BEGIN
     CREATE INDEX IX_PlannerSteps_SessionId ON dbo.PlannerSteps(SessionId);
 END
 
+-- E-mail verification with a one-time code (OTP)
+IF COL_LENGTH('dbo.Members', 'EmailVerified') IS NULL
+    ALTER TABLE dbo.Members ADD EmailVerified BIT NOT NULL CONSTRAINT DF_Members_EmailVerified DEFAULT (1);
+
+IF OBJECT_ID('dbo.EmailOtps', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.EmailOtps (
+        Id         INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_EmailOtps PRIMARY KEY,
+        Email      NVARCHAR(150) NOT NULL,
+        Purpose    NVARCHAR(20)  NOT NULL,
+        CodeHash   NVARCHAR(100) NOT NULL,
+        ExpiresAt  DATETIME2     NOT NULL,
+        Attempts   INT           NOT NULL,
+        CreatedAt  DATETIME2     NOT NULL,
+        UsedAt     DATETIME2     NULL
+    );
+    CREATE INDEX IX_EmailOtps_Email_Purpose ON dbo.EmailOtps(Email, Purpose);
+END
+
 -- The sample pictures changed from .svg drawings to compressed .webp photos.
 -- Point older rows at the new files (only the built-in sample paths are touched).
 UPDATE dbo.Programmes SET ImagePath = REPLACE(ImagePath, '.svg', '.webp')

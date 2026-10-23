@@ -554,3 +554,17 @@ code { color: var(--marigold); }
 select, .form-select { color-scheme: dark; }
 select option, select optgroup { background-color: var(--night-2); color: var(--text); }
 select option:checked { background-color: var(--night-3); color: #fff; }
+
+/* ---------- e-mail verification (OTP) ---------- */
+.otp-panel { position: relative; }
+.otp-icon { width: 3.4rem; height: 3.4rem; border-radius: 1rem; display: grid; place-items: center; font-size: 1.6rem; margin-bottom: .8rem;
+    background: rgba(52, 211, 153, .12); color: var(--emerald); border: 1px solid rgba(52, 211, 153, .3); box-shadow: 0 0 30px -10px var(--emerald); }
+.otp-input { font-size: 1.9rem; letter-spacing: .5em; text-align: center; font-variant-numeric: tabular-nums; font-weight: 700; padding: .55rem .6rem; }
+.otp-input::placeholder { letter-spacing: .35em; opacity: .45; }
+.otp-demo { display: flex; gap: .6rem; align-items: flex-start; padding: .7rem .85rem; margin-bottom: 1rem; border-radius: .7rem;
+    background: rgba(245, 179, 66, .1); border: 1px solid rgba(245, 179, 66, .35); color: var(--text); font-size: .93rem; }
+.otp-demo > i { color: var(--marigold); margin-top: .1rem; }
+.otp-demo-code { display: inline-block; margin-left: .3rem; padding: .05rem .5rem; border-radius: .4rem; background: rgba(0, 0, 0, .35);
+    color: var(--marigold); font-weight: 800; letter-spacing: .25em; font-size: 1.1rem; }
+/* keep room for the error line so the button does not jump when the message disappears */
+.otp-panel .field-validation-error, .otp-panel .field-validation-valid { display: block; min-height: 1.35em; }

@@ -51,5 +51,9 @@ namespace GiveAid.Models
 
         /// <summary>Admin can block a member by setting this to false.</summary>
         public bool IsActive { get; set; } = true;
+
+        /// <summary>True once the member has typed the code sent to their e-mail (members created before this feature count as verified).</summary>
+        [Display(Name = "E-mail verified")]
+        public bool EmailVerified { get; set; } = true;
     }
 }

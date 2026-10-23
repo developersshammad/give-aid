@@ -19,7 +19,7 @@
             @foreach (var m in Model)
             {
                 <tr class="@(m.IsActive ? "" : "opacity-50")">
-                    <td><b>@m.FullName</b>@if (!m.IsActive) { <span class="status status-open ms-1">Disabled</span> }</td>
+                    <td><b>@m.FullName</b>@if (!m.IsActive) { <span class="status status-open ms-1">Disabled</span> }@if (!m.EmailVerified) { <span class="status status-open ms-1" title="E-mail not verified yet">Not verified</span> }</td>
                     <td class="small">@m.Email<br />@m.Phone</td>
                     <td>@m.City</td>
                     <td class="small">@m.Occupation<br /><span class="text-secondary">@m.Organization</span></td>

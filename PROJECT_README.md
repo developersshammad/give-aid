@@ -349,3 +349,17 @@ The `Documentation` folder next to the solution contains:
 4. In Visual Studio: right-click the **GiveAid** project → **Publish** → **Import Profile** → choose the downloaded file → **Publish**.
 5. Open your `runasp.net` address. On the first visit the tables and sample data are created automatically. Admin: `/Admin` – admin / Admin@123 (change it after the first login).
 6. Optional: ask MonsterASP support to switch on HTTPS for the free site.
+
+## E-mail verification (OTP) and sending e-mail
+
+New members confirm their e-mail address with a 6-digit code, and members can reset a forgotten password with a code. Codes work for 10 minutes and 5 tries, a new code can be requested after 60 seconds (max 5 an hour), and only a salted hash of each code is stored (table `EmailOtps`).
+
+The website sends e-mail in one of two ways (appsettings.json, or appsettings.Production.json on the server):
+
+- **Brevo** (recommended on MonsterASP – its free plan blocks SMTP): create a free account at brevo.com, add and confirm a sender e-mail under *Senders & IP*, create an API key under *SMTP & API → API Keys*, then set
+  ```json
+  "Brevo": { "ApiKey": "xkeysib-...", "FromEmail": "your-confirmed-sender@gmail.com", "FromName": "Give-AID" }
+  ```
+- **SMTP** (Gmail app password, Outlook, your host's mail server): fill the `Smtp` section.
+
+Until one of them is set, new members are not asked for a code (the website still works). Admins can also mark a member's e-mail as verified on the member's page.

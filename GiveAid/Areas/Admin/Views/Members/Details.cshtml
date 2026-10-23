@@ -4,6 +4,12 @@
     ViewData["Title"] = m.FullName;
 }
 @section Actions {
+    @if (!m.EmailVerified)
+    {
+        <form asp-action="MarkVerified" asp-route-id="@m.Id" method="post" data-confirm="Mark @m.Email as verified without a code?">
+            <button class="btn btn-outline-ga"><i class="bi bi-envelope-check me-1"></i>Mark e-mail verified</button>
+        </form>
+    }
     <form asp-action="ToggleActive" asp-route-id="@m.Id" method="post" data-confirm="@(m.IsActive ? "Disable" : "Enable") this account?">
         <button class="btn @(m.IsActive ? "btn-outline-danger" : "btn-ga")">@(m.IsActive ? "Disable account" : "Enable account")</button>
     </form>
@@ -19,7 +25,7 @@
                 <dt>Gender</dt><dd>@m.Gender</dd>
                 <dt>Date of birth</dt><dd>@m.DateOfBirth?.ToString("dd MMM yyyy")</dd>
                 <dt>Address</dt><dd>@m.Address @m.City, @m.Country</dd>
-                <dt>Status</dt><dd class="mb-0">@(m.IsActive ? "Active" : "Disabled"), registered @m.RegisteredAt.ToString("dd MMM yyyy")</dd>
+                <dt>Status</dt><dd class="mb-0">@(m.IsActive ? "Active" : "Disabled"), registered @m.RegisteredAt.ToString("dd MMM yyyy") · @(m.EmailVerified ? "e-mail verified" : "e-mail NOT verified")</dd>
             </dl>
         </div>
         <div class="panel">

@@ -108,6 +108,52 @@ namespace GiveAid.Models.ViewModels
     }
 
     /// <summary>Data shown on the member's own dashboard.</summary>
+    /// <summary>Enter the 6-digit code sent to the e-mail address.</summary>
+    public class VerifyEmailViewModel
+    {
+        [Required, EmailAddress]
+        public string Email { get; set; } = "";
+
+        [Required(ErrorMessage = "Enter the 6-digit code.")]
+        [RegularExpression(@"^\s*\d{3}\s?\d{3}\s*$", ErrorMessage = "The code has 6 digits.")]
+        [Display(Name = "Verification code")]
+        public string Code { get; set; } = "";
+
+        public bool Remember { get; set; }
+        public string? ReturnUrl { get; set; }
+    }
+
+    public class ForgotPasswordViewModel
+    {
+        [Required(ErrorMessage = "Enter your e-mail address.")]
+        [EmailAddress(ErrorMessage = "Enter a valid e-mail address.")]
+        [Display(Name = "E-mail")]
+        public string Email { get; set; } = "";
+    }
+
+    public class ResetPasswordViewModel
+    {
+        [Required, EmailAddress]
+        public string Email { get; set; } = "";
+
+        [Required(ErrorMessage = "Enter the 6-digit code.")]
+        [RegularExpression(@"^\s*\d{3}\s?\d{3}\s*$", ErrorMessage = "The code has 6 digits.")]
+        [Display(Name = "Code from the e-mail")]
+        public string Code { get; set; } = "";
+
+        [Required(ErrorMessage = "Choose a new password.")]
+        [StringLength(50, MinimumLength = 8, ErrorMessage = "Password must be at least 8 characters.")]
+        [RegularExpression(@"^(?=.*[A-Za-z])(?=.*\d).+$", ErrorMessage = "Password must contain letters and at least one number.")]
+        [DataType(DataType.Password)]
+        [Display(Name = "New password")]
+        public string Password { get; set; } = "";
+
+        [Compare(nameof(Password), ErrorMessage = "Passwords do not match.")]
+        [DataType(DataType.Password)]
+        [Display(Name = "Confirm new password")]
+        public string ConfirmPassword { get; set; } = "";
+    }
+
     public class MemberDashboardViewModel
     {
         public Member Member { get; set; } = new();

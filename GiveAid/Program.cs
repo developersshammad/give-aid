@@ -55,6 +55,8 @@ builder.Services.AddAuthentication(AuthSchemes.Member)
 
 // ---------- Application services ----------
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+builder.Services.Configure<OtpOptions>(builder.Configuration.GetSection("EmailVerification"));
+builder.Services.AddScoped<OtpService>();
 builder.Services.AddScoped<FileStorage>();
 
 // ---------- AI Programme Planner (admin) ----------
@@ -66,6 +68,7 @@ builder.Services.AddHttpClient("openmeteo", c =>
     c.DefaultRequestHeaders.UserAgent.ParseAdd("GiveAID-Planner/1.0");
 });
 builder.Services.AddHttpClient("llm");
+builder.Services.AddHttpClient("brevo", c => c.Timeout = TimeSpan.FromSeconds(15));   // e-mail API
 builder.Services.AddScoped<GiveAid.Services.Planner.PlannerToolbox>();
 builder.Services.AddScoped<GiveAid.Services.Planner.PlannerService>();
 

@@ -55,5 +55,17 @@ namespace GiveAid.Areas.Admin.Controllers
             Success($"{member.FullName}'s account is now {(member.IsActive ? "active" : "disabled")}.");
             return RedirectToAction(nameof(Details), new { id });
         }
+
+        // Mark a member's e-mail as verified (e.g. when e-mail cannot be sent on this server)
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> MarkVerified(int id)
+        {
+            var member = await _db.Members.FindAsync(id);
+            if (member == null) return NotFound();
+            member.EmailVerified = true;
+            await _db.SaveChangesAsync();
+            Success($"{member.FullName}'s e-mail is now marked as verified.");
+            return RedirectToAction(nameof(Details), new { id });
+        }
     }
 }

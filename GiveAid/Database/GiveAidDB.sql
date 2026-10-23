@@ -46,9 +46,24 @@ CREATE TABLE Members (
     Qualification    NVARCHAR(100) NULL,
     AreasOfInterest  NVARCHAR(300) NULL,
     RegisteredAt     DATETIME2     NOT NULL,
-    IsActive         BIT           NOT NULL
+    IsActive         BIT           NOT NULL,
+    EmailVerified    BIT           NOT NULL CONSTRAINT DF_Members_EmailVerified DEFAULT (1)
 );
 CREATE UNIQUE INDEX IX_Members_Email ON Members(Email);
+GO
+
+/* ---------- EmailOtps : one-time codes for e-mail verification and password reset (only a salted hash is stored) ---------- */
+CREATE TABLE EmailOtps (
+    Id         INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_EmailOtps PRIMARY KEY,
+    Email      NVARCHAR(150) NOT NULL,
+    Purpose    NVARCHAR(20)  NOT NULL,      -- verify / reset
+    CodeHash   NVARCHAR(100) NOT NULL,      -- salt:hash
+    ExpiresAt  DATETIME2     NOT NULL,
+    Attempts   INT           NOT NULL,
+    CreatedAt  DATETIME2     NOT NULL,
+    UsedAt     DATETIME2     NULL
+);
+CREATE INDEX IX_EmailOtps_Email_Purpose ON EmailOtps(Email, Purpose);
 GO
 
 /* ---------- Causes : donation categories ---------- */

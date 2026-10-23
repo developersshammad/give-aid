@@ -26,6 +26,7 @@ namespace GiveAid.Data
         public DbSet<ProgrammeCostLine> ProgrammeCostLines => Set<ProgrammeCostLine>();
         public DbSet<PlannerSession> PlannerSessions => Set<PlannerSession>();
         public DbSet<PlannerStep> PlannerSteps => Set<PlannerStep>();
+        public DbSet<EmailOtp> EmailOtps => Set<EmailOtp>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -34,6 +35,8 @@ namespace GiveAid.Data
             // Table names (same as the SQL script in /Database)
             modelBuilder.Entity<Admin>().ToTable("Admins");
             modelBuilder.Entity<Member>().ToTable("Members");
+            modelBuilder.Entity<EmailOtp>().ToTable("EmailOtps");
+            modelBuilder.Entity<EmailOtp>().HasIndex(o => new { o.Email, o.Purpose });
             modelBuilder.Entity<Cause>().ToTable("Causes");
             modelBuilder.Entity<Donation>().ToTable("Donations");
             modelBuilder.Entity<Partner>().ToTable("Partners");
