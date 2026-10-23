@@ -344,7 +344,7 @@ The `Documentation` folder next to the solution contains:
 ## Deploying online (free) – MonsterASP.NET
 
 1. Create a free account at https://www.monsterasp.net and create a **website** (you get a `*.runasp.net` address) and an **MSSQL database**.
-2. Open the database details and copy server, database name, user and password into `GiveAid/appsettings.Production.json` (replace the `YOUR_...` values).
+2. Copy `GiveAid/appsettings.Production.example.json` to `appsettings.Production.json` and put the database server, name, user and password in it. On MonsterASP create this file in the website's wwwroot with the File Manager; it is not in the repository, so publishing never overwrites it.
 3. In the control panel of the website, open **Deploy (WebDeploy)** and download the publish profile (`.publishsettings`).
 4. In Visual Studio: right-click the **GiveAid** project → **Publish** → **Import Profile** → choose the downloaded file → **Publish**.
 5. Open your `runasp.net` address. On the first visit the tables and sample data are created automatically. Admin: `/Admin` – admin / Admin@123 (change it after the first login).

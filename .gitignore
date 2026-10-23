@@ -3,3 +3,6 @@ obj/
 node_modules/
 .vs/
 *.user
+
+# real server settings (database password) stay only on the server
+GiveAid/appsettings.Production.json
